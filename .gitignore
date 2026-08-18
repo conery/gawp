@@ -247,3 +247,5 @@ _version.py
 # Local additions
 DEVELOPMENT.md
 archives/
+/workflows/
+

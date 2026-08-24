@@ -5,7 +5,7 @@
 In 2021 Toraason _et al_ described an analysis pipeline for processing images of _C. elegans_ germlines.
 They describe _linearization_ algorithm that "straightens out" the U-shaped germline and maps the locations of developing germ cells to a relative location on the stight line.
 
-> _Images TBD_
+![germline](./docs/images/germline.png)
 
 The code in this repo defines a Python module named `gawp` (Germline Analysis With Pandas).
 

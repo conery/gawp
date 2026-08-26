@@ -26,11 +26,11 @@ In this example there are 250 cells (yellow circles) and 17 markers (labeled A t
 
 The algorithm maps each cell to the center line by finding the line segment closest to the cell and computing the intersection of a line through the cell and orthogonal to the segment.  This closeup view shows the intersections of the first few cells in the example data:
 
-<img src="https://github.com/conery/gawp/raw/main/docs/images/intersections.png" width="400">
+<img src="https://github.com/conery/gawp/raw/main/docs/images/intersections.png" width="200">
 
 The final output is a new spreadsheet with the $x$ coordinates of cells range from 0 to 1, based on normalizing the locations where they map to the center line:
 
-<img src="https://github.com/conery/gawp/raw/main/docs/images/linearized.png" width="400">
+<img src="https://github.com/conery/gawp/raw/main/docs/images/linearized.png" width="600">
 
 ### Reference
 

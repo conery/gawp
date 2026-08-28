@@ -8,7 +8,9 @@ import geopandas as gp
 import pandas as pd
 from shapely.geometry import Point
 
-# TODO  define column names in config file
+# TODO:  define column names in config file
+# TODO:  define name patterns for the meiotic stage file
+# TODO:  get meiotic stage names ("TZ_start", etc) from config file
 
 def parse_positions(f:pd.ExcelFile, sheet_name:str="Position"):
     '''
@@ -75,3 +77,21 @@ def get_measurements(df: pd.DataFrame, category:str="MeasurementPoint"):
         'point': [Point(pf.loc[i]['Position X'], pf.loc[i]['Position Y']) for i in range(len(pf))]
     }).set_geometry('point')
 
+def read_stages(f:pd.ExcelFile, data_name: str):
+    """
+    The IDs of the measurements that mark the starts of meiotic stages are all
+    in a single spreadsheet.  Parse that spreadsheet and return the stages for
+    one of the data sets (defined by the name of its XLS file).
+
+    Arguments:
+        f: the XLS file containing meiotic stage data
+        data_name: the name of the Imaris file (the position data)
+
+    Returns:
+        a dictionary with that associates a stage name with the ID of a 
+        measurement where that stage starts
+    """
+    xls_file_name = data_name.replace('.xlsx','.xls')
+    df = f.parse().set_index('GonadID')
+    row = df.loc[xls_file_name]
+    return {s: row[s] for s in ['TZ_start','TZ_end','Pachy_end']}

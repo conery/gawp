@@ -49,20 +49,30 @@ class Config:
 
     class Position:
         sheet = 'Position'
+        category_col = 'Category'
+        cell_category = 'Surface'
+        measurement_category = 'MeasurementPoint'
 
         class Cell:
             id_col_1 = 'Surpass Object'
             id_col_2 = 'ID'                     
-            category = 'Category'         
             x_coord = 'Position X'        
             y_coord = 'Position Y'       
 
         class Measurement:
             name = 'Name'           
-            category = 'Category' 
             x_coord = 'Position X'
             y_coord = 'Position Y'
- 
+
+    class MeioticStage:
+        id_col = 'GonadID'
+        stage_names = ['TZ_start','TZ_end','Pachy_end']
+
+def settings(cls):
+    '''
+    Return a dictionary containg the settings for a configuration section
+    '''
+    return { attr: val for (attr,val) in cls.__dict__.items() if not attr.startswith('_') } 
 
 def initialize_config(fn = None):
     '''
@@ -82,12 +92,16 @@ def initialize_config(fn = None):
     config = load_toml_file(cpath)
 
     if dct := config.get('position'):
-        if sname := dct.get('sheet'):
-            setattr(Config.Position, 'sheet', sname)
+        for s in ['sheet','category_col','cell_category','measurement_category']:
+            if val := dct.get(s):
+                add_attributes(Config.Position, {s:val})
         if subd := dct.get('cell'):
             add_attributes(Config.Position.Cell, subd)
         if subd := dct.get('measurement'):
-            add_attributes(Config.Position.Measurement, subd)  
+            add_attributes(Config.Position.Measurement, subd)
+
+    if dct := config.get('meioticstage'):
+        add_attributes(Config.MeioticStage, dct)
 
 ###
 #
@@ -139,12 +153,20 @@ def print_config():
     '''
     Print the configuration settings on the console
     '''
-    console.print('[blue]Configuration')
-    console.print('Position.sheet', Config.Position.sheet)
+    console.print('[blue]Position')
+    console.print('  sheet', Config.Position.sheet)
+    console.print('  category col', Config.Position.category_col)
+    console.print('  cell category', Config.Position.cell_category)
+    console.print('  meas category', Config.Position.measurement_category)
+    console.print('[blue]Position.Cell')
     for attr in [v for v in vars(Config.Position.Cell) if not v.startswith('_')]:
-        console.print(attr, getattr(Config.Position.Cell, attr))
+        console.print(' ',attr, getattr(Config.Position.Cell, attr))
+    console.print('[blue]Position.Measurement')
     for attr in [v for v in vars(Config.Position.Measurement) if not v.startswith('_')]:
-        console.print(attr, getattr(Config.Position.Measurement, attr))
+        console.print(' ',attr, getattr(Config.Position.Measurement, attr))
+    console.print('[blue]MeioticStage')
+    for attr in [v for v in vars(Config.MeioticStage) if not v.startswith('_')]:
+        console.print(' ',attr, getattr(Config.MeioticStage, attr))
 
 # TODO: use table of subclass names
 # TODO: print rich table

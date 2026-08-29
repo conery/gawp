@@ -8,73 +8,85 @@ import geopandas as gp
 import pandas as pd
 from shapely.geometry import Point
 
-# TODO:  define column names in config file
+from .config import Config, settings
+
 # TODO:  define name patterns for the meiotic stage file
 # TODO:  get meiotic stage names ("TZ_start", etc) from config file
 
-def parse_positions(f:pd.ExcelFile, sheet_name:str="Position"):
+def parse_positions(f:pd.ExcelFile):
     '''
     Read location data from an XLS file exported by Imaris.  Returns a Pandas
     data frame with all the rows from the sheet that has positions.  By default
     the name of that sheet is "Position" but another name can be passed.
-
-    TODO:  get the sheet name and column names from a config file
      
     Arguments:
         f:  the XLS file to read from
-        sheet_name (optional): the name of the sheet that has the data (default: "Position")
 
     Returns:
         a Pandas frame containing the ID, X and Y location, and category from each row
     '''
+    sheet_name = Config.Position.sheet
     assert sheet_name in f.sheet_names, f"spreadheet is missing the '{sheet_name}' sheet"
     sf = f.parse(sheet_name, header=1)
 
-    required_cols = ['ID', 'Name', 'Category', 'Surpass Object', 'Position X', 'Position Y']
-    assert set(required_cols) < set(sf.columns), f"sheet is missing one or more required colums ({required_cols})"
+    required_cols = { Config.Position.category_col }
+    required_cols |= set(settings(Config.Position.Cell).values())
+    required_cols |= set(settings(Config.Position.Measurement).values())
+    assert required_cols < set(sf.columns), f"sheet is missing one or more required colums ({required_cols})"
 
-    return sf[required_cols]
+    return sf[list(required_cols)]
 
-def get_cell_positions(df: pd.DataFrame, category:str="Surface"):
+def get_cell_positions(df: pd.DataFrame):
     '''
     Extract the cell location data from a DataFrame created from the Position sheet in 
     an XLS file exported by Imaris.  
      
     Arguments:
         df:  the data frame with position data
-        category (optional): the type of data to read (default: "Surface")
 
     Returns:
         a GeoDataFrame containing unique IDs for each cell and a Point object with the
         x and y coordinates of the cell.
     '''
-    pf = df[df['Category']==category]
+    CATEGORY_COL = Config.Position.category_col
+    CATEGORY_VAL = Config.Position.cell_category
+    ID_PART_1 = Config.Position.Cell.id_col_1
+    ID_PART_2 = Config.Position.Cell.id_col_2
+    X_COORD = Config.Position.Cell.x_coord
+    Y_COORD = Config.Position.Cell.y_coord
+
+    pf = df[df[CATEGORY_COL]==CATEGORY_VAL]
     pf.index = range(len(pf))
 
     return gp.GeoDataFrame({
-        'id': pf['Surpass Object'] + pf['ID'].apply(str),
-        'point': [Point(pf.loc[i]['Position X'], pf.loc[i]['Position Y']) for i in range(len(pf))]
+        'id': pf[ID_PART_1] + pf[ID_PART_2].apply(str),
+        'point': [Point(pf.loc[i][X_COORD], pf.loc[i][Y_COORD]) for i in range(len(pf))]
     }).set_geometry('point')
 
-def get_measurements(df: pd.DataFrame, category:str="MeasurementPoint"):
+def get_measurements(df: pd.DataFrame):
     '''
     Extract the measurement locations from a DataFrame created from the Position sheet in 
     an XLS file exported by Imaris.
      
     Arguments:
         df:  the data frame with position data
-        category (optional): the type of data to read (default: "MeasurementPoint")
 
     Returns:
         a GeoDataFrame containing unique IDs for each measurement ppint and a Point object with the
         x and y coordinates of the measurement.
     '''
-    pf = df[df['Category']==category]
+    CATEGORY_COL = Config.Position.category_col
+    CATEGORY_VAL = Config.Position.measurement_category
+    ID_COL = Config.Position.Measurement.name
+    X_COORD = Config.Position.Measurement.x_coord
+    Y_COORD = Config.Position.Measurement.y_coord
+
+    pf = df[df[CATEGORY_COL]==CATEGORY_VAL]
     pf.index = range(len(pf))
 
     return gp.GeoDataFrame({
-        'name': pf['Name'],
-        'point': [Point(pf.loc[i]['Position X'], pf.loc[i]['Position Y']) for i in range(len(pf))]
+        'name': pf[ID_COL],
+        'point': [Point(pf.loc[i][X_COORD], pf.loc[i][Y_COORD]) for i in range(len(pf))]
     }).set_geometry('point')
 
 def read_stages(f:pd.ExcelFile, data_name: str):
@@ -91,7 +103,10 @@ def read_stages(f:pd.ExcelFile, data_name: str):
         a dictionary with that associates a stage name with the ID of a 
         measurement where that stage starts
     """
+    ID_COL = Config.MeioticStage.id_col
+    STAGE_NAMES = Config.MeioticStage.stage_names
+
     xls_file_name = data_name.replace('.xlsx','.xls')
-    df = f.parse().set_index('GonadID')
+    df = f.parse().set_index(ID_COL)
     row = df.loc[xls_file_name]
-    return {s: row[s] for s in ['TZ_start','TZ_end','Pachy_end']}
+    return {s: row[s] for s in STAGE_NAMES}

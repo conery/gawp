@@ -7,18 +7,22 @@
 # brackets)
 
 [position]
-# sheet = 'Position'                # the name of the sheet that has position data
+# sheet = 'Position'                    # the name of the sheet that has position data
+# category_col = 'Category'             # name of column that has type of object
+# cell_category = 'Surface'             # value in category column for cells
+# measurement_category = 'MeasurementPoint'  # value in category column for measurements
 
 [position.cell]
 # id_col_1 = 'Surpass Object'       # column name for cell ID
 # id_col_2 = 'ID'                   # column name for cell ID
-# category = 'Category'             # column name for data type (cell or measurement)
 # x_coord = 'Position X'            # column name for x coordinate
 # y_coord = 'Position Y'            # column name for xycoordinate
 
 [position.measurement]
 # name = 'Name'                     # column name for measurement ID
-# category = 'Category'             # column name for data type (cell or measurement)
 # x_coord = 'Position X'            # column name for x coordinate
 # y_coord = 'Position Y'            # column name for y coordinate
 
+[meioticstage]
+# id_col = 'GonadID'
+# stage_names = ['TZ_start','TZ_end','Pachy_end']

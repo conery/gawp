@@ -29,26 +29,22 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
 ]
-# TODO: add keywords
-keywords = []
-# TODO: add dependencies
 dependencies = [
-    "pandas >= 3.0",
     "geopandas >= 1.1",
-    "shapely >= 2.1",
+    "pandas >= 3.0",
+    "python-calamine >= 0.7",
     "rich >= 15",
+    "shapely >= 2.1",
 ]
 
 [project.scripts]
 gawp = "gawp.main:main"
 
 [project.urls]
-Homepage = "https://github.com/conery/gawp"
-"Source Code" = "https://github.com/conery/gawp"
-"Bug Tracker" = "https://github.com/conery/gawp/issues"
-Documentation = "https://gawp.readthedocs.io"
-# Note: update this url when you have published your package to pypi. (or delete it)
-Download = "https://pypi.org/project/gawp/#files"
+# Homepage = "https://github.com/conery/gawp"
+# "Source Code" = "https://github.com/conery/gawp"
+# "Bug Tracker" = "https://github.com/conery/gawp/issues"
+# Documentation = "https://gawp.readthedocs.io"
 
 [dependency-groups]
 dev = [

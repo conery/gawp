@@ -1,0 +1,17 @@
+# This file is a template for GAWP configuration settings.  Each
+# line shows the default value for a setting.  To set your own
+# value uncomment the line and edit the value to the right of the
+# equal sign.  
+
+# IMPORTANT:  Do not edit the section names (strings between square
+# brackets)
+
+[position]
+sheet = 'Pos'
+
+[position.cell]
+x_coord = 'X'
+y_coord = 'Y'
+
+[position.measurement]
+name = 'Z'

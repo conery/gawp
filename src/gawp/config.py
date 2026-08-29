@@ -51,14 +51,14 @@ class Config:
         sheet = 'Position'
 
         class Cell:
-            id = 'ID'                     
-            object_name = 'Surpass Object'
+            id_col_1 = 'Surpass Object'
+            id_col_2 = 'ID'                     
             category = 'Category'         
             x_coord = 'Position X'        
             y_coord = 'Position Y'       
 
         class Measurement:
-            id = 'Name'           
+            name = 'Name'           
             category = 'Category' 
             x_coord = 'Position X'
             y_coord = 'Position Y'
@@ -85,13 +85,9 @@ def initialize_config(fn = None):
         if sname := dct.get('sheet'):
             setattr(Config.Position, 'sheet', sname)
         if subd := dct.get('cell'):
-            for aname, aval in subd.items():
-                setattr(Config.Position.Cell, aname, aval)
+            add_attributes(Config.Position.Cell, subd)
         if subd := dct.get('measurement'):
-            for aname, aval in subd.items():
-                setattr(Config.Position.Measurement, aname, aval)  
-
-# TODO:  table of subclass names, iterate over table to set attributes  
+            add_attributes(Config.Position.Measurement, subd)  
 
 ###
 #
@@ -130,17 +126,6 @@ def load_toml_file(fn):
         res = tomllib.load(f)
     return res
 
-def compile_specs(fmt, specs):
-    '''
-    Helper method for initialize_config.  Convert column mapping specs into
-    Python functions that can be called by the parser.
-    '''
-    Config.CSV.colmaps[fmt] = { }
-    for field, expr in specs.items():
-        e = f'lambda rec: {expr}'
-        f = eval(e, locals={}, globals={})
-        Config.CSV.colmaps[fmt][field] = f
-
 def add_attributes(cls, specs):
     '''
     Helper method for initialize_config.  Iterate over a section of the
@@ -148,7 +133,7 @@ def add_attributes(cls, specs):
     '''
     for name, val in specs.items():
         setattr(cls, name, val)    
-        logging.debug(f'{cls}: {name} = {val} {type(val)}')
+        logging.debug(f'{cls.__name__}: {name} = {val} ({type(val).__name__})')
 
 def print_config():
     '''

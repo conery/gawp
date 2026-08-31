@@ -1,0 +1,12 @@
+# This file is loaded after the last configuration test to reset the
+# global Config class to default settings.  
+
+[position]
+sheet = 'Position'                # the name of the sheet that has position data
+
+[position.cell]
+x_coord = 'Position X'            # column name for x coordinate
+y_coord = 'Position Y'            # column name for xycoordinate
+
+[position.measurement]
+name_col = 'Name'                 # column name for measurement ID

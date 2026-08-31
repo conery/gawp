@@ -60,7 +60,7 @@ class Config:
             y_coord = 'Position Y'       
 
         class Measurement:
-            name = 'Name'           
+            name_col = 'Name'           
             x_coord = 'Position X'
             y_coord = 'Position Y'
 

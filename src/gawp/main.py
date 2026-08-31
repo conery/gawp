@@ -10,6 +10,7 @@ import sys
 from .config import Config, initialize_config, print_config, setup
 from .console import console, setup_logging
 from .io import parse_positions, read_stages, get_measurements, get_cell_positions
+from .linearize import linearize
 
 def init_cli():
     """
@@ -27,7 +28,8 @@ def init_cli():
     subparsers = parser.add_subparsers(title='subcommands', dest='command')
 
     run_parser = subparsers.add_parser('run', help='linearize all Imaris files in the project')
-    run_parser.set_defaults(dispatch=linearize)
+    run_parser.set_defaults(dispatch=run_pipeline)
+    run_parser.add_argument('file', metavar='F', nargs='+', type=Path, help='name of output file')
 
     explore_parser = subparsers.add_parser('explore', help='review outputs for a single germline')
     explore_parser.set_defaults(dispatch=explore)
@@ -66,10 +68,6 @@ def init_cli():
 
 # Stubs for top level commands, will eventually be moved to their own source files
 
-def linearize(args):
-    logging.info('linearize')
-    logging.info(str(vars(args)))
-
 def explore(args):
     logging.info('explore')
     logging.info(str(vars(args)))
@@ -77,6 +75,12 @@ def explore(args):
 def print_info(args):
     logging.info('info')
     print_config()
+
+def run_pipeline(args):
+    '''
+    Run the linearization pipeline on all files named on the command line.
+    '''
+    linearize(args)
 
 def main():
     """

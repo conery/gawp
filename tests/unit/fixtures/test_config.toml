@@ -14,4 +14,4 @@ x_coord = 'X'
 y_coord = 'Y'
 
 [position.measurement]
-name = 'Z'
+name_col = 'Z'

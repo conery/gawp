@@ -19,7 +19,7 @@
 # y_coord = 'Position Y'            # column name for xycoordinate
 
 [position.measurement]
-# name = 'Name'                     # column name for measurement ID
+# name_col = 'Name'                     # column name for measurement ID
 # x_coord = 'Position X'            # column name for x coordinate
 # y_coord = 'Position Y'            # column name for y coordinate
 

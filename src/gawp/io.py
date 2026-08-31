@@ -77,7 +77,7 @@ def get_measurements(df: pd.DataFrame):
     '''
     CATEGORY_COL = Config.Position.category_col
     CATEGORY_VAL = Config.Position.measurement_category
-    ID_COL = Config.Position.Measurement.name
+    ID_COL = Config.Position.Measurement.name_col
     X_COORD = Config.Position.Measurement.x_coord
     Y_COORD = Config.Position.Measurement.y_coord
 

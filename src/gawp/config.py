@@ -13,8 +13,6 @@ from pathlib import Path
 from shutil import copy2
 import tomllib
 
-from .console import console
-
 ###
 #
 # This function is called to initialize a new project directory.  Copy
@@ -68,6 +66,14 @@ class Config:
         id_col = 'GonadID'
         stage_names = ['TZ_start','TZ_end','Pachy_end']
 
+    class Imaris:
+        data = None
+        measurements = None
+
+    class Output:
+        data = None
+        log = None
+
 def settings(cls):
     '''
     Return a dictionary containg the settings for a configuration section
@@ -100,8 +106,15 @@ def initialize_config(fn = None):
         if subd := dct.get('measurement'):
             add_attributes(Config.Position.Measurement, subd)
 
-    if dct := config.get('meioticstage'):
-        add_attributes(Config.MeioticStage, dct)
+    specs = [
+        ('meioticstage', Config.MeioticStage),
+        ('imaris', Config.Imaris),
+        ('output', Config.Output),
+    ]
+
+    for name, cls in specs:
+        if dct := config.get(name):
+            add_attributes(cls, dct)
 
 ###
 #
@@ -149,24 +162,23 @@ def add_attributes(cls, specs):
         setattr(cls, name, val)    
         logging.debug(f'{cls.__name__}: {name} = {val} ({type(val).__name__})')
 
-def print_config():
-    '''
-    Print the configuration settings on the console
-    '''
-    console.print('[blue]Position')
-    console.print('  sheet', Config.Position.sheet)
-    console.print('  category col', Config.Position.category_col)
-    console.print('  cell category', Config.Position.cell_category)
-    console.print('  meas category', Config.Position.measurement_category)
-    console.print('[blue]Position.Cell')
-    for attr in [v for v in vars(Config.Position.Cell) if not v.startswith('_')]:
-        console.print(' ',attr, getattr(Config.Position.Cell, attr))
-    console.print('[blue]Position.Measurement')
-    for attr in [v for v in vars(Config.Position.Measurement) if not v.startswith('_')]:
-        console.print(' ',attr, getattr(Config.Position.Measurement, attr))
-    console.print('[blue]MeioticStage')
-    for attr in [v for v in vars(Config.MeioticStage) if not v.startswith('_')]:
-        console.print(' ',attr, getattr(Config.MeioticStage, attr))
+# def print_config():
+#     '''
+#     Print the configuration settings on the console
+#     '''
+#     console.print('[blue]Position')
+#     console.print('  sheet', Config.Position.sheet)
+#     console.print('  category col', Config.Position.category_col)
+#     console.print('  cell category', Config.Position.cell_category)
+#     console.print('  meas category', Config.Position.measurement_category)
+#     console.print('[blue]Position.Cell')
+#     for attr in [v for v in vars(Config.Position.Cell) if not v.startswith('_')]:
+#         console.print(' ',attr, getattr(Config.Position.Cell, attr))
+#     console.print('[blue]Position.Measurement')
+#     for attr in [v for v in vars(Config.Position.Measurement) if not v.startswith('_')]:
+#         console.print(' ',attr, getattr(Config.Position.Measurement, attr))
+#     console.print('[blue]MeioticStage')
+#     for attr in [v for v in vars(Config.MeioticStage) if not v.startswith('_')]:
+#         console.print(' ',attr, getattr(Config.MeioticStage, attr))
 
-# TODO: use table of subclass names
 # TODO: print rich table

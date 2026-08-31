@@ -15,3 +15,9 @@ y_coord = 'Y'
 
 [position.measurement]
 name_col = 'Z'
+
+[imaris]
+data = './data/PRG*'
+
+[output]
+data = '.'

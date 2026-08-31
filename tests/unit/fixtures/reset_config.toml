@@ -10,3 +10,9 @@ y_coord = 'Position Y'            # column name for xycoordinate
 
 [position.measurement]
 name_col = 'Name'                 # column name for measurement ID
+
+[imaris]
+data = ''
+
+[output]
+data = ''

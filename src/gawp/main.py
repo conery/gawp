@@ -7,8 +7,8 @@ import logging
 from pathlib import Path
 import sys
 
-from .config import Config, initialize_config, print_config, setup
-from .console import console, setup_logging
+from .config import Config, initialize_config, setup
+from .console import console, setup_logging, print_config
 from .io import parse_positions, read_stages, get_measurements, get_cell_positions
 from .linearize import linearize
 
@@ -29,14 +29,14 @@ def init_cli():
 
     run_parser = subparsers.add_parser('run', help='linearize all Imaris files in the project')
     run_parser.set_defaults(dispatch=run_pipeline)
-    run_parser.add_argument('file', metavar='F', nargs='+', type=Path, help='name of output file')
+    run_parser.add_argument('--file', metavar='F', nargs='+', type=Path, help='data file')
 
-    explore_parser = subparsers.add_parser('explore', help='review outputs for a single germline')
-    explore_parser.set_defaults(dispatch=explore)
-    explore_parser.add_argument('file', metavar='F', type=Path, help='name of output file')
+    review_parser = subparsers.add_parser('review', help='review outputs for a single germline')
+    review_parser.set_defaults(dispatch=review)
+    review_parser.add_argument('--dir', metavar='D', type=Path, help='output directory')
 
-    info_parser = subparsers.add_parser('info', help='print project status')
-    info_parser.set_defaults(dispatch=print_info)
+    status_parser = subparsers.add_parser('status', help='print project status')
+    status_parser.set_defaults(dispatch=print_status)
 
     setup_parser = subparsers.add_parser('setup', help='initialize a project')
 
@@ -68,19 +68,25 @@ def init_cli():
 
 # Stubs for top level commands, will eventually be moved to their own source files
 
-def explore(args):
-    logging.info('explore')
+def review(args):
+    logging.info('review')
     logging.info(str(vars(args)))
 
-def print_info(args):
-    logging.info('info')
+def print_status(args):
     print_config()
 
 def run_pipeline(args):
     '''
     Run the linearization pipeline on all files named on the command line.
     '''
-    linearize(args)
+    if args.file:
+        globbed = [f.resolve() for f in args.file]
+    elif Config.Imaris.data:
+        globbed = [f.resolve() for p in Config.Imaris.data.split() for f in Path('.').glob(p)]
+    else:
+        raise ValueError('Specify path to input data in configuration or with --file')
+    for fn in globbed:
+        linearize(args, fn)
 
 def main():
     """

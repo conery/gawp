@@ -19,10 +19,18 @@
 # y_coord = 'Position Y'            # column name for xycoordinate
 
 [position.measurement]
-# name_col = 'Name'                     # column name for measurement ID
+# name_col = 'Name'                 # column name for measurement ID
 # x_coord = 'Position X'            # column name for x coordinate
 # y_coord = 'Position Y'            # column name for y coordinate
 
 [meioticstage]
 # id_col = 'GonadID'
 # stage_names = ['TZ_start','TZ_end','Pachy_end']
+
+[imaris]
+# data = ''                         # filename pattern ("glob") for input files
+# measurements = ''                 # name of file with measurement data
+
+[output]
+# data = ''                         # name of directory for output files
+# log = ''                          # name of directory for log files

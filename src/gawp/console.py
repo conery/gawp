@@ -7,8 +7,10 @@ import logging
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.style import Style
-from rich.table import Table, Column as TableColumn
+from rich.table import Table, Column
 from rich.theme import Theme
+
+from .config import Config
 
 # Suggested colors for terminals with a light theme
 
@@ -47,8 +49,8 @@ dark_terminal = Theme({
     ),
 })
 
-console = Console(theme=dark_terminal, emoji=None)
-# console = Console(theme=light_terminal)
+# console = Console(theme=dark_terminal, emoji=None)
+console = Console(theme=light_terminal)
 
 def setup_logging(arg):
     """
@@ -66,5 +68,50 @@ def setup_logging(arg):
         format='%(message)s',
         handlers = [RichHandler(markup=True, rich_tracebacks=True, show_time=False, show_path=(arg=='debug'))],
     )
+
+def print_config():
+    '''
+    Print a table showing configuration settings.
+    '''
+
+    t = Table(
+        "Section",
+        "Setting",
+        "Value",
+        title="Configuration",
+        title_justify='left',
+        title_style='table_header',
+        show_header=False,
+    )
+    t.add_row("position", "sheet", Config.Position.sheet)
+    t.add_row("", "category_col", Config.Position.category_col)
+    t.add_row("", "cell_category", Config.Position.cell_category)
+    t.add_row("", "measurement_category", Config.Position.measurement_category)
+
+    t.add_section()
+    t.add_row("position.cell", "id_col_1", Config.Position.Cell.id_col_1)
+    t.add_row("", "id_col_2", Config.Position.Cell.id_col_2)
+    t.add_row("", "x_coord", Config.Position.Cell.x_coord)
+    t.add_row("", "y_coord", Config.Position.Cell.y_coord)
+
+    t.add_section()
+    t.add_row("position.measurement", "name_col", Config.Position.Measurement.name_col)
+    t.add_row("", "x_coord", Config.Position.Measurement.x_coord)
+    t.add_row("", "y_coord", Config.Position.Measurement.y_coord)
+
+    t.add_section()
+    t.add_row("meioticstage", "id_col",  Config.MeioticStage.id_col)
+    t.add_row("", "stage_names", str(Config.MeioticStage.stage_names))
+
+    t.add_section()
+    t.add_row("imaris", "data", Config.Imaris.data)
+    t.add_row("", "measurements", Config.Imaris.measurements)
+
+    t.add_section()
+    t.add_row("output", "data", Config.Output.data)
+    t.add_row("", "log", Config.Output.log)
+
+    console.print()
+    console.print(t)
 
 

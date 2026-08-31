@@ -53,6 +53,13 @@ def create_segments(mf: pd.DataFrame, sd: dict):
    
     return df.set_geometry('segment')
 
-def linearize(args):
-    logging.info('linearize')
-    logging.info(str(vars(args)))
+def linearize(args, fn):
+    '''
+    Top level function of the linearization algorithm on one file.
+
+    Arguments:
+        args:  command line arguments
+        files:  the path to a spreadsheets with Imaris data
+    '''
+    logging.info(f'linearize {fn}')
+

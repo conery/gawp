@@ -67,12 +67,12 @@ class Config:
         stage_names = ['TZ_start','TZ_end','Pachy_end']
 
     class Imaris:
-        data = None
-        measurements = None
+        data = ''
+        measurements = ''
 
     class Output:
-        data = None
-        log = None
+        data = ''
+        log = ''
 
 def settings(cls):
     '''

@@ -28,6 +28,9 @@ class TestConfig:
         assert Config.Position.Measurement.name_col == 'Name'
         assert Config.Position.Measurement.x_coord == 'Position X'
         assert Config.Position.Measurement.y_coord == 'Position Y'
+        assert Config.MeioticStage.stage_names == ['TZ_start','TZ_end','Pachy_end']
+        assert Config.Imaris.data == ''
+        assert Config.Output.data == ''
 
     def test_initialize_config(self):
         '''
@@ -40,6 +43,8 @@ class TestConfig:
         assert Config.Position.Cell.x_coord == 'X'
         assert Config.Position.Cell.y_coord == 'Y'
         assert Config.Position.Measurement.name_col == 'Z'
+        assert Config.Imaris.data == './data/PRG*'
+        assert Config.Output.data == '.'
         # these items should be left unchanged and have the default values
         assert Config.Position.category_col == 'Category'
         assert Config.Position.cell_category == 'Surface'

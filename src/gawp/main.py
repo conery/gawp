@@ -28,8 +28,9 @@ def init_cli():
     subparsers = parser.add_subparsers(title='subcommands', dest='command')
 
     run_parser = subparsers.add_parser('run', help='linearize all Imaris files in the project')
-    run_parser.set_defaults(dispatch=run_pipeline)
+    run_parser.set_defaults(dispatch=linearize)
     run_parser.add_argument('--file', metavar='F', nargs='+', type=Path, help='data file')
+    run_parser.add_argument('--output', metavar='D', help='name of directory for output files')
 
     review_parser = subparsers.add_parser('review', help='review outputs for a single germline')
     review_parser.set_defaults(dispatch=review)
@@ -74,19 +75,6 @@ def review(args):
 
 def print_status(args):
     print_config()
-
-def run_pipeline(args):
-    '''
-    Run the linearization pipeline on all files named on the command line.
-    '''
-    if args.file:
-        globbed = [f.resolve() for f in args.file]
-    elif Config.Imaris.data:
-        globbed = [f.resolve() for p in Config.Imaris.data.split() for f in Path('.').glob(p)]
-    else:
-        raise ValueError('Specify path to input data in configuration or with --file')
-    for fn in globbed:
-        linearize(args, fn)
 
 def main():
     """

@@ -4,6 +4,8 @@ gawp.io
 Functions for reading and writing spreadsheet files
 """
 
+import re
+
 import geopandas as gp
 import pandas as pd
 from shapely.geometry import Point
@@ -63,7 +65,7 @@ def get_cell_positions(df: pd.DataFrame):
         'point': [Point(pf.loc[i][X_COORD], pf.loc[i][Y_COORD]) for i in range(len(pf))]
     }).set_geometry('point')
 
-def get_measurements(df: pd.DataFrame):
+def get_measurement_positions(df: pd.DataFrame):
     '''
     Extract the measurement locations from a DataFrame created from the Position sheet in 
     an XLS file exported by Imaris.
@@ -89,24 +91,23 @@ def get_measurements(df: pd.DataFrame):
         'point': [Point(pf.loc[i][X_COORD], pf.loc[i][Y_COORD]) for i in range(len(pf))]
     }).set_geometry('point')
 
-def read_stages(f:pd.ExcelFile, data_name: str):
+def read_stages(f:pd.ExcelFile):
     """
     The IDs of the measurements that mark the starts of meiotic stages are all
-    in a single spreadsheet.  Parse that spreadsheet and return the stages for
-    one of the data sets (defined by the name of its XLS file).
+    in a single spreadsheet.  Parse that spreadsheet and return it as a
+    Pandas DataFrame.
+
+    Note: the data set names in the ID column from the spreadsheet are file names.
+    The index in the new data frame is created by stripping the extension from the
+    file names.
 
     Arguments:
         f: the XLS file containing meiotic stage data
-        data_name: the name of the Imaris file (the position data)
 
     Returns:
-        a dictionary with that associates a stage name with the ID of a 
-        measurement where that stage starts
+        a data frame with stage data
     """
     ID_COL = Config.MeioticStage.id_col
-    STAGE_NAMES = Config.MeioticStage.stage_names
-
-    xls_file_name = data_name.replace('.xlsx','.xls')
-    df = f.parse().set_index(ID_COL)
-    row = df.loc[xls_file_name]
-    return {s: row[s] for s in STAGE_NAMES}
+    df = f.parse()
+    df[ID_COL] = df[ID_COL].str.split('.').str[:-1].str.join('.')
+    return df.set_index(ID_COL)

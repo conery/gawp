@@ -9,7 +9,6 @@ import sys
 
 from .config import Config, initialize_config, setup
 from .console import console, setup_logging, print_config
-from .io import parse_positions, read_stages, get_measurements, get_cell_positions
 from .linearize import linearize
 
 def init_cli():

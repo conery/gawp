@@ -13,6 +13,7 @@ import pandas as pd
 from shapely.geometry import Point, LineString
 
 from .config import Config
+from .io import parse_positions, read_stages, get_measurement_positions, get_cell_positions
 
 
 def linearize(args):
@@ -41,7 +42,7 @@ def get_stage_data():
             res = None
         else:
             with pd.ExcelFile(p, engine='calamine') as f:
-                res = f.parse().set_index('GonadID')            
+                res = read_stages(f)
     else:
         logging.warn(f'config has no value for imaris.measurement')
         res = None
@@ -113,20 +114,34 @@ def make_output_dir(args):
     logging.info(f'output directory: {p}')
     return p
 
-def run_pipeline(fn, out, stages, preview):
+def run_pipeline(fn, out, sf, pre):
     '''
     Execute all steps of the linearization algorithm.
 
     Arguments:
         fn:    path to a spreadsheet with Imaris data
+        out:   path to the output directory
+        sf:    frame with meiotic stage data
+        pre:   if True print log but don't execute the steps
     '''
     logging.info(f'linearize {fn}')
-    if preview:
-        return
 
-    print(fn)
-    print(out)
-    print(stages.head())
+    # Open the spreadsheet, read the position and measurement data
+    with pd.ExcelFile(fn, engine="calamine") as f:
+        df = parse_positions(f)
+        nuclei = get_cell_positions(df)
+        measurements = get_measurement_positions(df)
+        logging.info(f'  {len(nuclei)} cell positions')
+        logging.info(f'  {len(measurements)} measurement positions')
+
+    # Get the meiotic stages for this data set
+    id = Path(fn).stem
+    if id in sf.index:
+        row = sf.loc[id]
+        stages = {s:row[s] for s in Config.MeioticStage.stage_names}
+        logging.info(f'  meiotic stages: {stages}')
+    else:
+        logging.warning(f'  no row for {id} in meotic stage frame, stages will not be assigned')
 
 # 
 

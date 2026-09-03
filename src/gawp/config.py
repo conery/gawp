@@ -5,8 +5,7 @@
 # variable that can be imported by other modules.
 #
 
-from collections import namedtuple
-from enum import Enum
+from dataclasses import dataclass, asdict, field
 import logging
 import os
 from pathlib import Path
@@ -33,152 +32,141 @@ def setup(args):
         src = Path(__file__).parent / fn
         copy2(src,dest)
         logging.info(f'{src} => {dest}')
-        
+
+    logging.warning('Deprecated -- have app create and print a default Config')
     copy_item(CONFIG_FILE_NAME)
     # TBD -- copy additional items
 
 
 ###
 # 
-# The configuration is saved in a class named Config
+# Configurations are saved in instances of a class named Config.  Each
+# section of the config file is defined by its own subclass.
 #
 
+@dataclass
+class Cell:
+    id_col_1: str = 'Surpass Object'
+    id_col_2: str = 'ID'                     
+    x_coord: str = 'Position X'        
+    y_coord: str = 'Position Y'       
+
+@dataclass
+class Measurement:
+    name_col: str = 'Name'           
+    x_coord: str = 'Position X'
+    y_coord: str = 'Position Y'
+
+@dataclass
+class Position:
+    sheet: str = 'Position'
+    category_col: str = 'Category'
+    cell_category: str = 'Surface'
+    measurement_category: str = 'MeasurementPoint'
+    cell: Cell = field(default_factory=Cell)
+    measurement: Measurement = field(default_factory=Measurement)
+
+@dataclass
+class MeioticStage:
+    id_col: str = 'GonadID'
+    stage_names: list[str] = field(default_factory=lambda: ['TZ_start','TZ_end','Pachy_end'])
+
+@dataclass
+class Imaris:
+    data: str = ''
+    measurements: str = ''
+
+@dataclass
+class Output:
+    data: str = ''
+    log: str = ''
+
+@dataclass
 class Config:
+    position: Position = field(default_factory=Position)
+    meioticstage: MeioticStage = field(default_factory=MeioticStage)
+    imaris: Imaris = field(default_factory=Imaris)
+    output: Output = field(default_factory=Output)
 
-    class Position:
-        sheet = 'Position'
-        category_col = 'Category'
-        cell_category = 'Surface'
-        measurement_category = 'MeasurementPoint'
+    def update(self, dct):
+        '''
+        Perform a deep update, copying values from a dictionary (loaded from
+        a TOML file) into this object).
+        '''
+        Config._dfs(self, asdict(self), dct)
 
-        class Cell:
-            id_col_1 = 'Surpass Object'
-            id_col_2 = 'ID'                     
-            x_coord = 'Position X'        
-            y_coord = 'Position Y'       
-
-        class Measurement:
-            name_col = 'Name'           
-            x_coord = 'Position X'
-            y_coord = 'Position Y'
-
-    class MeioticStage:
-        id_col = 'GonadID'
-        stage_names = ['TZ_start','TZ_end','Pachy_end']
-
-    class Imaris:
-        data = ''
-        measurements = ''
-
-    class Output:
-        data = ''
-        log = ''
+    def _dfs(self, d1, d2):
+        '''
+        Helper function, does a depth-first traversal of the object's subclasses.
+        '''
+        for k1, v1 in d1.items():
+            if k1 in d2.keys():
+                v2 = d2[k1]
+                if isinstance(v1,dict) and isinstance(v2,dict):
+                    cls = getattr(self, k1)
+                    Config._dfs(cls, v1, v2)
+                else:
+                    setattr(self, k1, v2)
 
 def settings(cls):
     '''
-    Return a dictionary containg the settings for a configuration section
+    Return a dictionary containing all the settings of a configuration class
     '''
-    return { attr: val for (attr,val) in cls.__dict__.items() if not attr.startswith('_') } 
+    return {k: v for k, v in asdict(cls).items() if not isinstance(v,dict)}
 
-def initialize_config(fn = None):
+# Create the global configuration object:
+
+config = Config()
+
+# This function will look for user settings and use them to update an existing
+# configuration
+
+def initialize_config(text = None, fn = None):
     '''
-    Initialize configuration settings.  Looks for a TOML file in
-    the following places, in order:
-    * the file specified with the --config command line option
-    * an environment variable named GAWP_CONFIG
-    * a file named gawp.toml in the current directory
-    * a default file in the module's src folder
-
-    After decoding the file save the settings in class variables.
+    Update the global configuration object with settings from a string containing a 
+    TOML format specification or from a TOML file.  If both arguments are None look 
+    for a config file in the current directory.  
 
     Arguments:
-        fn:  config file name specified on the command line
+        text: a string in TOML format
+        fn:  the name of a TOML file
     '''
-    cpath = find_toml_file(fn)
-    config = load_toml_file(cpath)
 
-    if dct := config.get('position'):
-        for s in ['sheet','category_col','cell_category','measurement_category']:
-            if val := dct.get(s):
-                add_attributes(Config.Position, {s:val})
-        if subd := dct.get('cell'):
-            add_attributes(Config.Position.Cell, subd)
-        if subd := dct.get('measurement'):
-            add_attributes(Config.Position.Measurement, subd)
+    # Reset the configuration to its default values (used by unit tests and notebooks)
+    config.update(asdict(Config()))
 
-    specs = [
-        ('meioticstage', Config.MeioticStage),
-        ('imaris', Config.Imaris),
-        ('output', Config.Output),
-    ]
+    if text:
+        logging.debug(f'config: initializing from text')
+        dct = tomllib.loads(text)
+    elif cpath := find_toml_file(fn):
+        logging.debug(f'config: reading configuration from {cpath}')
+        with open(cpath, 'rb') as f:
+            dct = tomllib.load(f)
+    else:
+        dct = {}
 
-    for name, cls in specs:
-        if dct := config.get(name):
-            add_attributes(cls, dct)
+    config.update(dct)
 
 ###
 #
-# Helper functions for initialize_config
+# Helper functions
 #
 
 def find_toml_file(fn):
     '''
     Helper function for initialize_config.  Looks for the config file
-    in known locations, raises an exception if no config file found.
+    in known locations.
     '''
-    p = fn or os.getenv('GAWP_CONFIG')
-    if p is not None:
-        config_path = Path(p)
+    if fn:
+        config_path = Path(fn).resolve()
         if not config_path.is_file():
             raise FileNotFoundError(f'init_config: no such file: {config_path}')
         return config_path
     
-    config_path = Path.cwd() / 'gawp.toml'
+    config_path = Path.cwd() / CONFIG_FILE_NAME
     if config_path.is_file():
         return config_path
     
-    project_dir = Path(__file__).parent
-    config_path = project_dir / 'gawp.toml'
-    if not config_path.is_file():
-        raise ModuleNotFoundError(f'no config file in distribution?')
-    return config_path
+    return None
 
-def load_toml_file(fn):
-    '''
-    Helper function for initialize_config.  Reads the contents of the config
-    file, returns a dict with config settings.
-    '''
-    logging.debug(f'config: reading configuration from {fn}')
-    with open(fn, 'rb') as f:
-        res = tomllib.load(f)
-    return res
 
-def add_attributes(cls, specs):
-    '''
-    Helper method for initialize_config.  Iterate over a section of the
-    config file, save the settings in the Config subclass for that section.
-    '''
-    for name, val in specs.items():
-        setattr(cls, name, val)    
-        logging.debug(f'{cls.__name__}: {name} = {val} ({type(val).__name__})')
-
-# def print_config():
-#     '''
-#     Print the configuration settings on the console
-#     '''
-#     console.print('[blue]Position')
-#     console.print('  sheet', Config.Position.sheet)
-#     console.print('  category col', Config.Position.category_col)
-#     console.print('  cell category', Config.Position.cell_category)
-#     console.print('  meas category', Config.Position.measurement_category)
-#     console.print('[blue]Position.Cell')
-#     for attr in [v for v in vars(Config.Position.Cell) if not v.startswith('_')]:
-#         console.print(' ',attr, getattr(Config.Position.Cell, attr))
-#     console.print('[blue]Position.Measurement')
-#     for attr in [v for v in vars(Config.Position.Measurement) if not v.startswith('_')]:
-#         console.print(' ',attr, getattr(Config.Position.Measurement, attr))
-#     console.print('[blue]MeioticStage')
-#     for attr in [v for v in vars(Config.MeioticStage) if not v.startswith('_')]:
-#         console.print(' ',attr, getattr(Config.MeioticStage, attr))
-
-# TODO: print rich table

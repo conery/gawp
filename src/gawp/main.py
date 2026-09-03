@@ -83,7 +83,7 @@ def main():
     try:
         initialize_config(args.config)
         args.dispatch(args)
-    except (ValueError, FileNotFoundError, ModuleNotFoundError) as err:
+    except (AssertionError, ValueError, FileNotFoundError, ModuleNotFoundError) as err:
         logging.error(err)
     except Exception as err:
         console.print_exception(show_locals=True)

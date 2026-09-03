@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from shapely.geometry import Point, LineString
 
-from .config import Config
+from .config import config
 from .io import parse_positions, read_stages, get_measurement_positions, get_cell_positions
 
 
@@ -35,7 +35,7 @@ def get_stage_data():
     Find the name of the meiotic stage spreadsheet in the config file,
     read the spreadsheet.
     '''
-    if fn := Config.Imaris.measurements:
+    if fn := config.imaris.measurements:
         p = Path(fn).resolve()
         if not p.is_file():
             logging.warn(f'imaris.measurements "{fn}": file not found')
@@ -69,10 +69,10 @@ def get_spreadsheet_names(args):
     '''
     if args.file:
         globbed = [f.resolve() for f in args.file]
-    elif Config.Imaris.data:
-        globbed = [f.resolve() for p in Config.Imaris.data.split() for f in Path('.').glob(p)]
+    elif config.imaris.data:
+        globbed = [f.resolve() for p in config.imaris.data.split() for f in Path('.').glob(p)]
         if len(globbed) == 0:
-            raise ValueError(f'no files match pattern from imaris.data: "{Config.Imaris.data}"')
+            raise ValueError(f'no files match pattern from imaris.data: "{config.imaris.data}"')
     else:
         raise ValueError('Specify path to input data in configuration or with --file')
 
@@ -100,7 +100,7 @@ def make_output_dir(args):
     Returns:
         a list of paths to spreadsheeets
     '''
-    fn = args.output or Config.Output.data
+    fn = args.output or config.output.data
     if not fn:
         raise ValueError('specify an output directory in the config file or with --output')
 
@@ -138,7 +138,7 @@ def run_pipeline(fn, out, sf, pre):
     id = Path(fn).stem
     if id in sf.index:
         row = sf.loc[id]
-        stages = {s:row[s] for s in Config.MeioticStage.stage_names}
+        stages = {s:row[s] for s in config.meioticstage.stage_names}
         logging.info(f'  meiotic stages: {stages}')
     else:
         logging.warning(f'  no row for {id} in meotic stage frame, stages will not be assigned')
@@ -159,8 +159,8 @@ def create_segments(mf: pd.DataFrame, sd: dict):
     Returns:
         a Pandas frame with line segments and their equations and lengths.
     '''
-    PMT_NAME = Config.MeioticStage.stage_names[0]
-    TZ_NAME = Config.MeioticStage.stage_names[1]
+    PMT_NAME = config.meioticstage.stage_names[0]
+    TZ_NAME = config.meioticstage.stage_names[1]
 
     def orientation(sp, ep):
         'Helper function, determines orientation of line from sp to ep'

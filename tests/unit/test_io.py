@@ -6,7 +6,7 @@ import pytest
 
 import pandas as pd
 import geopandas as gp
-from gawp.io import parse_positions, get_cell_positions, get_measurements, read_stages
+from gawp.io import parse_positions, get_cell_positions, get_measurement_positions, read_stages
 
 TEST_DATA = 'data/PRG-1_herm_g05_sample.xlsx'
 TEST_STAGES = 'data/stages.xlsx'
@@ -56,7 +56,7 @@ class TestIO:
         of measurement points and returns them in a GeoPandas frame
         """
         sf = parse_positions(data_file)
-        df = get_measurements(sf)
+        df = get_measurement_positions(sf)
         assert type(df) == gp.geodataframe.GeoDataFrame
         assert len(df) == 17
         assert list(df.columns) == ['name', 'point']
@@ -68,8 +68,9 @@ class TestIO:
         """
         Test the function that reads the stage data for the test data set
         """
-        dct = read_stages(stage_file, '210924_DLW67_noAUX_HS_RAD51_AID_herm_g05_stitched.xls')
-        assert dct['TZ_start'] == 'G'
-        assert dct['TZ_end'] == 'L'
-        assert dct['Pachy_end'] == 'Q'
+        df = read_stages(stage_file)
+        row = df.loc['210924_DLW67_noAUX_HS_RAD51_AID_herm_g05_stitched']
+        assert row['TZ_start'] == 'G'
+        assert row['TZ_end'] == 'L'
+        assert row['Pachy_end'] == 'Q'
     

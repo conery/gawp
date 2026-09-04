@@ -12,9 +12,13 @@ import numpy as np
 import pandas as pd
 from shapely.geometry import Point, LineString
 
-from .config import config
-from .io import parse_positions, read_stages, get_measurement_positions, get_cell_positions
+from gawp.config import config
+import gawp.io as io
 
+##########################
+#
+# linearize
+#
 
 def linearize(args):
     '''
@@ -25,125 +29,62 @@ def linearize(args):
         args:  command line arguments
         fn:    path to a spreadsheet with Imaris data
     '''
-    output_dir = make_output_dir(args)
-    stage_frame = get_stage_data()
-    for fn in get_spreadsheet_names(args):
-        run_pipeline(fn, output_dir, stage_frame, args.preview)
+    output_dir = io.make_output_dir(args)
+    stage_frame = io.read_stages()
+    for fn in io.get_spreadsheet_names(args):
+        nuclei, measurements = read_data(fn)
+        stages = select_stage(fn, stage_frame)
 
-def get_stage_data():
+
+##########################
+#
+# Pipeline step:  read the cell and measurement locations from the data file
+#
+
+def read_data(fn):
     '''
-    Find the name of the meiotic stage spreadsheet in the config file,
-    read the spreadsheet.
+    Get the position data from the spreadsheet, return two dataframes, one
+    for the rows that have cell positions and one for rows with measurement
+    positions.
     '''
-    if fn := config.imaris.measurements:
-        p = Path(fn).resolve()
-        if not p.is_file():
-            logging.warn(f'imaris.measurements "{fn}": file not found')
-            res = None
-        else:
-            with pd.ExcelFile(p, engine='calamine') as f:
-                res = read_stages(f)
-    else:
-        logging.warn(f'config has no value for imaris.measurement')
-        res = None
+    df = io.read_positions(fn)
 
-    if res is None:
-        logging.warn('meiotic stages will not be assigned')
-    else:
-        logging.info(f'using meioitic stage names from {p}')
+    cf = io.get_cell_positions(df)
+    logging.info(f'  {len(cf)} cell positions')
 
-    return res
+    mf = io.get_measurement_positions(df)
+    logging.info(f'  {len(mf)} measurement positions')
 
-def get_spreadsheet_names(args):
+    return cf, mf
+
+##########################
+#
+# Pipeline step:  create a dictionary with the meiotic stages of the current
+# data set.
+#
+
+def select_stage(fn, sf):
     '''
-    Return a list of names of spreasheets with Imaris data.
-
-    File names from the command line take precedence over names from the 
-    config file.  Warns the user if a file does not exist.
+    Find the row in the stage frame for the current input file.
 
     Arguments:
-        args:  command line arguments
+        fn: the name of the spreadsheet file for the current data set
+        sf: a data frame read from the measurements spreadsheet
 
     Returns:
-        a list of paths to spreadsheeets
+        a dictionary that maps a stage name to the measurement point where that
+        stage begins.
     '''
-    if args.file:
-        globbed = [f.resolve() for f in args.file]
-    elif config.imaris.data:
-        globbed = [f.resolve() for p in config.imaris.data.split() for f in Path('.').glob(p)]
-        if len(globbed) == 0:
-            raise ValueError(f'no files match pattern from imaris.data: "{config.imaris.data}"')
-    else:
-        raise ValueError('Specify path to input data in configuration or with --file')
-
-    res = []
-    for fn in globbed:
-        if Path.is_dir(fn):
-            logging.warn(f'ignoring directory name {fn}; use {fn}/* to specify all files in a directory')
-            continue
-        if not Path.exists(fn):
-            logging.warn(f'file not found: {fn}')
-            continue
-        res.append(fn)
-
-    return res
-
-def make_output_dir(args):
-    '''
-    Return the path to the directory where outputs will be written.  A name
-    specified on the command line takes precedence over a name in the config
-    file.  Creates the directory if it does not exist.
-
-    Arguments:
-        args:  command line arguments
-
-    Returns:
-        a list of paths to spreadsheeets
-    '''
-    fn = args.output or config.output.data
-    if not fn:
-        raise ValueError('specify an output directory in the config file or with --output')
-
-    p = Path(fn).resolve()
-    try:
-        p.mkdir(parents=True, exist_ok=True)
-    except FileExistsError as err:
-        logging.error(f"can't use {fn} for directory name; there is an existing file named {p}")
-        raise ValueError("choose a different output name or rename/delete the existing file")
-
-    logging.info(f'output directory: {p}')
-    return p
-
-def run_pipeline(fn, out, sf, pre):
-    '''
-    Execute all steps of the linearization algorithm.
-
-    Arguments:
-        fn:    path to a spreadsheet with Imaris data
-        out:   path to the output directory
-        sf:    frame with meiotic stage data
-        pre:   if True print log but don't execute the steps
-    '''
-    logging.info(f'linearize {fn}')
-
-    # Open the spreadsheet, read the position and measurement data
-    with pd.ExcelFile(fn, engine="calamine") as f:
-        df = parse_positions(f)
-        nuclei = get_cell_positions(df)
-        measurements = get_measurement_positions(df)
-        logging.info(f'  {len(nuclei)} cell positions')
-        logging.info(f'  {len(measurements)} measurement positions')
-
-    # Get the meiotic stages for this data set
     id = Path(fn).stem
     if id in sf.index:
         row = sf.loc[id]
         stages = {s:row[s] for s in config.meioticstage.stage_names}
-        logging.info(f'  meiotic stages: {stages}')
     else:
         logging.warning(f'  no row for {id} in meotic stage frame, stages will not be assigned')
+        stages = {}
 
-# 
+    logging.info(f'  meiotic stages: {stages}')
+    return stages
 
 
 def create_segments(mf: pd.DataFrame, sd: dict):

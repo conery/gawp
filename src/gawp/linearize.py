@@ -154,7 +154,7 @@ def compute_distances(df: gp.GeoDataFrame):
     The function computes three distances for each cell/segment combination: the distance to the head of the
     segment, the distance to the tail, and the distance to the line connecting the two.  The shortest
     of these three is saved as the distance between the cell and the segment.
-    
+
     Arguments:
       df: a GeoDataFrame that has the line segments and their equations
 
@@ -197,3 +197,58 @@ def minimum_distance(df: gp.GeoDataFrame, cpf: gp.GeoDataFrame):
     '''
     locs = df.groupby('nuc_id')[['distance']].idxmin()
     return gp.GeoDataFrame(df.loc[locs.distance].join(cpf[['point','head','tail','orientation','A','C','pathlen']]))
+
+##########################
+#
+# Pipeline step: compute perpendicular intersections
+#
+
+def add_intersections(df: gp.GeoDataFrame):
+    '''
+    Determine the location where nuclei intersect line segments.  The alternatives
+    are (a) the closest point is in the middle of the line, and we need to compute
+    the perpendiclar intersection of a line from the cell to the segment, or (b) the
+    closest point is one of the end points.
+
+    The output frame has two new columns:  `loc` is the point on the line segment
+    that is closest to the cell, and `pathseq` is the distance from the head of the segment
+    to that point. 
+
+    Arguments:
+      df: a frame that has line segments and their equations
+
+    Returns:
+      a copy of `df` with `loc` and `pathseg` columns
+    '''
+    mids = df[df['intersection']=='mid']
+    xp = (mids.point.y - (-mids.point.x/mids.A) - mids.C) / (mids.A - (-1/mids.A))
+    yp = (-xp/mids.A) + mids.point.y - (-mids.point.x/mids.A)
+    mids['loc'] = [Point(xp.iloc[i],yp.iloc[i]) for i in range(len(mids))]
+
+    heads = df[df['intersection']=='head']
+    heads['loc'] = heads['head']
+
+    tails = df[df['intersection']=='tail']
+    tails['loc'] = tails['tail']
+
+    res = pd.concat([mids,heads,tails]).set_geometry('loc')
+    res['pathseg'] = gp.GeoDataFrame.distance(res['head'], res['loc'])
+    
+    return res
+
+##########################
+#
+# Pipeline step: compute normalized positions
+#
+
+def add_normalized_locations(df: gp.GeoDataFrame, sf: pd.DataFrame):
+    '''
+    Add a new column to the data set that shows the total distance from the
+    start of the germline to each intersection point, normalized by the total
+    length of the germline.
+
+    Argument:
+        df: a data frame with intersection columns
+    '''
+    scale = np.sum(sf['length'])
+    df['pathloc'] = (df['pathlen'] + df['pathseg']) / scale

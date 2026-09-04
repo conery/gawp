@@ -49,7 +49,7 @@ def make_output_dir(args):
 # read_stages
 #
 
-def read_stages():
+def read_stages(fn=None):
     """
     The IDs of the measurements that mark the starts of meiotic stages are all
     in a single spreadsheet.  Parse that spreadsheet and return it as a
@@ -60,20 +60,22 @@ def read_stages():
     file names.
 
     Arguments:
-        none
+        fn: name of spreadsheet file; if None, get the name from config
 
     Returns:
         a data frame with stage data
     """
-    if fn := config.imaris.measurements:
-        p = Path(fn).resolve()
+    fname = fn or config.imaris.measurements
+    if fname:
+        p = Path(fname).resolve()
         if not p.is_file():
-            logging.warn(f'imaris.measurements "{fn}": file not found')
+            logging.warn(f'imaris.measurements "{p}": file not found')
             res = None
         else:
             ID_COL = config.meioticstage.id_col
             with pd.ExcelFile(p, engine='calamine') as f:
                 df = f.parse()
+                assert ID_COL in df.columns, f"measurements spreadsheet does not have a column named {ID_COL}"
                 df[ID_COL] = df[ID_COL].str.split('.').str[:-1].str.join('.')
                 res = df.set_index(ID_COL)
     else:
@@ -142,7 +144,6 @@ def read_positions(fn):
     Returns:
         a Pandas frame containing the ID, X and Y location, and category from each row
     '''
-
     sheet_name = config.position.sheet
 
     with pd.ExcelFile(fn, engine="calamine") as f:

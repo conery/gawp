@@ -33,7 +33,8 @@ def linearize(args):
     stage_frame = io.read_stages()
     for fn in io.get_spreadsheet_names(args):
         nuclei, measurements = read_data(fn)
-        stages = select_stage(fn, stage_frame)
+        if stage_frame is not None:
+            stages = select_stage(fn, stage_frame)
 
 
 ##########################

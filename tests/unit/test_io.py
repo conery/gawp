@@ -6,7 +6,7 @@ import pytest
 
 import pandas as pd
 import geopandas as gp
-from gawp.io import parse_positions, get_cell_positions, get_measurement_positions, read_stages
+import gawp.io as io
 
 TEST_DATA = 'data/PRG-1_herm_g05_sample.xlsx'
 TEST_STAGES = 'data/stages.xlsx'
@@ -28,11 +28,11 @@ class TestIO:
         assert len(data_file.sheet_names) == 39
         assert 'Position' in data_file.sheet_names
 
-    def test_parse_positions(self, data_file):
+    def test_read_positions(self, data_file):
         """
         Test the function that parses the Position sheet in the XLS file
         """
-        sf = parse_positions(data_file)
+        sf = io.read_positions(TEST_DATA)
         assert len(sf) == 4596
         assert {'Position X', 'Position Y', 'Category'} < set(sf.columns)
 
@@ -41,8 +41,8 @@ class TestIO:
         Test the get_cell_positions function, which gets x and y coordinates
         of cells from the Position sheet and returns them in a GeoPandas frame
         """
-        sf = parse_positions(data_file)
-        df = get_cell_positions(sf)
+        sf = io.read_positions(TEST_DATA)
+        df = io.get_cell_positions(sf)
         assert type(df) == gp.geodataframe.GeoDataFrame
         assert len(df) == 4579
         assert list(df.columns) == ['id', 'point']
@@ -55,8 +55,8 @@ class TestIO:
         Test the get_measurements function, which gets x and y coordinates
         of measurement points and returns them in a GeoPandas frame
         """
-        sf = parse_positions(data_file)
-        df = get_measurement_positions(sf)
+        sf = io.read_positions(TEST_DATA)
+        df = io.get_measurement_positions(sf)
         assert type(df) == gp.geodataframe.GeoDataFrame
         assert len(df) == 17
         assert list(df.columns) == ['name', 'point']
@@ -68,7 +68,7 @@ class TestIO:
         """
         Test the function that reads the stage data for the test data set
         """
-        df = read_stages(stage_file)
+        df = io.read_stages(TEST_STAGES)
         row = df.loc['210924_DLW67_noAUX_HS_RAD51_AID_herm_g05_stitched']
         assert row['TZ_start'] == 'G'
         assert row['TZ_end'] == 'L'

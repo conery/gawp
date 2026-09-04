@@ -91,3 +91,12 @@ class TestConfig:
         assert config.imaris.measurements == ''
         assert config.output.data == ''
         assert config.output.log == ''
+
+    @classmethod
+    def teardown_class(cls):
+        '''
+        Function called after the last test, resets the global Config
+        class for future tests.
+        '''
+        initialize_config()
+        

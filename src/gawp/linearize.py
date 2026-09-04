@@ -33,8 +33,12 @@ def linearize(args):
     stage_frame = io.read_stages()
     for fn in io.get_spreadsheet_names(args):
         nuclei, measurements = read_data(fn)
-        if stage_frame is not None:
-            stages = select_stage(fn, stage_frame)
+        stages = select_stage(fn, stage_frame) if stage_frame is not None else None
+        segments = create_segments(measurements, stages)
+        product = gp.GeoDataFrame.join(nuclei, segments, how="cross")
+        distances = compute_distances(product)
+        merged = minimum_distance(distances, product)
+        print(merged.head())
 
 
 ##########################
@@ -87,6 +91,10 @@ def select_stage(fn, sf):
     logging.info(f'  meiotic stages: {stages}')
     return stages
 
+##########################
+#
+# Pipeline step: create line segments from the measurement data
+#
 
 def create_segments(mf: pd.DataFrame, sd: dict):
     '''
@@ -96,7 +104,7 @@ def create_segments(mf: pd.DataFrame, sd: dict):
 
     Arguments:
         mf:  a data frame with names and locations of measurement points
-        sd:  (optional) a dictionary with meiotic stage definitions
+        sd:  a dictionary with meiotic stage definitions (can be None)
 
     Returns:
         a Pandas frame with line segments and their equations and lengths.
@@ -124,6 +132,68 @@ def create_segments(mf: pd.DataFrame, sd: dict):
     df['C'] = df['head'].y - df['head'].x*df['A']
     df['length'] = Point.distance(df['head'], df['tail'])
     df['pathlen'] = np.cumulative_sum(df['length'], include_initial=True)[:-1]
-    df['stage'] = [('PMT' if p < sd[PMT_NAME] else 'TZ' if p < sd[TZ_NAME] else 'PACH') for p in mf['name'][0:-1]]
+    if sd:
+        df['stage'] = [('PMT' if p < sd[PMT_NAME] else 'TZ' if p < sd[TZ_NAME] else 'PACH') for p in mf['name'][0:-1]]
    
     return df.set_geometry('segment')
+
+##########################
+#
+# Pipeline step: compute distances between cells and segments
+#
+
+def compute_distances(df: gp.GeoDataFrame):
+    '''
+    Create a new frame that summarizes the distances between nuclei and line segments.  The
+    columns in the new frame will be:
+    * `nuc_id`, the nucleus ID
+    * `seg_name`, the name of the segment
+    * `distance`, the distance from the nucleus to the segment
+    * `intersection`, a string that identifies where the nucleus is closest (head, tail, middle of the segment)
+    
+    The function computes three distances for each cell/segment combination: the distance to the head of the
+    segment, the distance to the tail, and the distance to the line connecting the two.  The shortest
+    of these three is saved as the distance between the cell and the segment.
+    
+    Arguments:
+      df: a GeoDataFrame that has the line segments and their equations
+
+    Returns:
+      a frame with the distance values
+    '''
+    
+    pos = gp.GeoDataFrame({
+        'head': gp.GeoDataFrame.distance(df['point'],df['head']),
+        'tail': gp.GeoDataFrame.distance(df['point'],df['tail']),
+        'mid': gp.GeoDataFrame.distance(df['point'],df['segment']),
+    })
+
+    res = gp.GeoDataFrame({
+        'nuc_id': df['id'],
+        'seg_name': df['name'],
+        'distance': pos.min(axis='columns'),
+        'intersection': pos.idxmin(axis='columns')
+    })
+
+    return res
+
+##########################
+#
+# Pipeline step: find the closest segment to each cell
+#
+
+def minimum_distance(df: gp.GeoDataFrame, cpf: gp.GeoDataFrame):
+    '''
+    Form groups based on cell ID, and then find the row in each group that has the
+    shortest distance to a line segment.  Save the **row numbers** of those rows in a
+    frame called `locs`.
+
+    Then use those row numbers to select the corresonding rows from the combined data
+    to create a frame that has the complete cell and segment data for the seleced rows.
+
+    Arguments:
+        df: the data frame with all distance combinations
+        cpf: the cross product frame
+    '''
+    locs = df.groupby('nuc_id')[['distance']].idxmin()
+    return gp.GeoDataFrame(df.loc[locs.distance].join(cpf[['point','head','tail','orientation','A','C','pathlen']]))

@@ -17,7 +17,9 @@ import gawp.io as io
 
 ##########################
 #
-# linearize
+# Top level function.  Pass the command line arguments to this function, it will
+# open each Imaris spreadsheet, import the data points, and run the full pipeline
+# on all data sets.
 #
 
 def linearize(args):
@@ -38,7 +40,9 @@ def linearize(args):
         product = gp.GeoDataFrame.join(nuclei, segments, how="cross")
         distances = compute_distances(product)
         merged = minimum_distance(distances, product)
-        print(merged.head())
+        add_normalized_locations(merged, segments)
+        final = rename_stages(merged, segments) if stages else merged
+        print(final.head())
 
 
 ##########################
@@ -134,7 +138,8 @@ def create_segments(mf: pd.DataFrame, sd: dict):
     df['pathlen'] = np.cumulative_sum(df['length'], include_initial=True)[:-1]
     if sd:
         df['stage'] = [('PMT' if p < sd[PMT_NAME] else 'TZ' if p < sd[TZ_NAME] else 'PACH') for p in mf['name'][0:-1]]
-   
+
+    logging.info(f'  added geometry columns to {len(df)} rows')
     return df.set_geometry('segment')
 
 ##########################
@@ -175,6 +180,7 @@ def compute_distances(df: gp.GeoDataFrame):
         'intersection': pos.idxmin(axis='columns')
     })
 
+    logging.info(f'  added distances to {len(res)} combinations')
     return res
 
 ##########################
@@ -184,57 +190,51 @@ def compute_distances(df: gp.GeoDataFrame):
 
 def minimum_distance(df: gp.GeoDataFrame, cpf: gp.GeoDataFrame):
     '''
-    Form groups based on cell ID, and then find the row in each group that has the
-    shortest distance to a line segment.  Save the **row numbers** of those rows in a
-    frame called `locs`.
-
-    Then use those row numbers to select the corresonding rows from the combined data
-    to create a frame that has the complete cell and segment data for the seleced rows.
+    Form groups in the distance frame based on cell ID, and then find the row in 
+    each group that has the shortest distance to a line segment.  Select rows from
+    the cross product that have the shortest distances, compute the intersection 
+    points, and add the distance from the start of the segment to the intersection point.
 
     Arguments:
         df: the data frame with all distance combinations
         cpf: the cross product frame
-    '''
-    locs = df.groupby('nuc_id')[['distance']].idxmin()
-    return gp.GeoDataFrame(df.loc[locs.distance].join(cpf[['point','head','tail','orientation','A','C','pathlen']]))
-
-##########################
-#
-# Pipeline step: compute perpendicular intersections
-#
-
-def add_intersections(df: gp.GeoDataFrame):
-    '''
-    Determine the location where nuclei intersect line segments.  The alternatives
-    are (a) the closest point is in the middle of the line, and we need to compute
-    the perpendiclar intersection of a line from the cell to the segment, or (b) the
-    closest point is one of the end points.
-
-    The output frame has two new columns:  `loc` is the point on the line segment
-    that is closest to the cell, and `pathseq` is the distance from the head of the segment
-    to that point. 
-
-    Arguments:
-      df: a frame that has line segments and their equations
 
     Returns:
-      a copy of `df` with `loc` and `pathseg` columns
+        a frame with one row per cell along with new columns for the distances
     '''
-    mids = df[df['intersection']=='mid']
+    # define a list of names of columns to include in the result frame
+    output_cols = ['nuc_id','seg_name','point','head','tail','distance','orientation','pathlen','loc','pathseg']
+    # if 'stage' in cpf.columns:
+    #     output_cols.append('stage')
+
+    # find the row number with the minimum distance for each cell
+    locs = df.groupby('nuc_id')[['distance']].idxmin()
+
+    # make a temporary frame that has the rows from the combined frame, using the
+    # locations computed above
+    tdf = gp.GeoDataFrame(df.loc[locs.distance].join(cpf[['point','head','tail','orientation','A','C','pathlen']]))
+
+    # separate the rows by intersection type; compute the perpendicular intersections
+    # where the closest point is in the middle, or use one of the end points when the
+    # closest point is the head or tail.
+    mids = tdf[tdf['intersection']=='mid']
     xp = (mids.point.y - (-mids.point.x/mids.A) - mids.C) / (mids.A - (-1/mids.A))
     yp = (-xp/mids.A) + mids.point.y - (-mids.point.x/mids.A)
     mids['loc'] = [Point(xp.iloc[i],yp.iloc[i]) for i in range(len(mids))]
 
-    heads = df[df['intersection']=='head']
+    heads = tdf[tdf['intersection']=='head']
     heads['loc'] = heads['head']
 
-    tails = df[df['intersection']=='tail']
+    tails = tdf[tdf['intersection']=='tail']
     tails['loc'] = tails['tail']
 
+    # concatenate the three groups into a single frame and add a column
+    # for the distance from the start of the segment to the intersection point
     res = pd.concat([mids,heads,tails]).set_geometry('loc')
     res['pathseg'] = gp.GeoDataFrame.distance(res['head'], res['loc'])
     
-    return res
+    logging.info(f'  minimium distances for {len(res)} cells')
+    return res[output_cols]
 
 ##########################
 #
@@ -252,3 +252,47 @@ def add_normalized_locations(df: gp.GeoDataFrame, sf: pd.DataFrame):
     '''
     scale = np.sum(sf['length'])
     df['pathloc'] = (df['pathlen'] + df['pathseg']) / scale
+
+    logging.info(f'  normalized paths for {len(df)} cells')
+
+
+##########################
+#
+# Pipeline step: add meioitic stage names to each point
+#
+
+def rename_stages(df, sf):
+    '''
+    Update the stage column to the data frame.  For rows where the stage is
+    PMT or TZ the stage is the same.  For cells that have PACH in the stage
+    column change the stage to EP, MP, or LP.  Find the linearized distance 
+    from the first cell in PACH to the last cell, divide by 3, and set the 
+    stage of the first third to EP, the second third to MP, and the rest to LP.
+
+    Arguments:
+        df:  the data frame with distance columns
+        sf:  the frame with segment definitions
+
+    Returns:
+        a copy of df with the stage column updated with new names
+    '''
+    blocks = []
+    for s in ['PMT','TZ']:
+        sn = set(sf[sf['stage']==s].name)
+        blk = df[df.seg_name.isin(sn)]
+        blk['stage'] = s
+        blocks.append(blk)
+    sn = set(sf[sf['stage']=='PACH'].name)
+    blk = df[df.seg_name.isin(sn)]
+    delta = (blk['pathloc'].max() - blk['pathloc'].min()) / 3
+    a = blk['pathloc'].min()
+    for s in ['EP','MP','LP']:
+        b = a + delta
+        pf = df[(df.pathloc >= a) & (df.pathloc <= b)]
+        pf['stage'] = s
+        blocks.append(pf)
+        a += delta
+
+    res = pd.concat(blocks)
+    logging.info(f'  meiotic stages for {len(res)} cells')
+    return res

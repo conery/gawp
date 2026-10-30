@@ -34,6 +34,7 @@ def linearize(args):
     output_dir = io.make_output_dir(args)
     stage_frame = io.read_stages()
     for fn in io.get_spreadsheet_names(args):
+        logging.info(f'[bold blue]Linearizing {fn.stem}')
         nuclei, measurements = read_data(fn)
         stages = select_stage(fn, stage_frame) if stage_frame is not None else None
         segments = create_segments(measurements, stages)
@@ -42,7 +43,8 @@ def linearize(args):
         merged = minimum_distance(distances, product)
         add_normalized_locations(merged, segments)
         final = rename_stages(merged, segments) if stages else merged
-        print(final.head())
+        logging.info(f'  saving {len(final)} linearized data points')
+        # print(final.head())
 
 
 ##########################

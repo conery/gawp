@@ -81,6 +81,7 @@ def main():
     """
     args = init_cli()
     try:
+        # todo -- pass args, not just config
         initialize_config(args.config)
         args.dispatch(args)
     except (AssertionError, ValueError, FileNotFoundError, ModuleNotFoundError) as err:

@@ -1,17 +1,96 @@
 """
 gawp.io
 
-Functions for reading and writing spreadsheet files
+Functions for reading and writing spreadsheet files and accessing module resources
 """
 
 import logging
 from pathlib import Path
+import importlib.resources
 
 import geopandas as gp
 import pandas as pd
 from shapely.geometry import Point
 
 from .config import config, settings
+
+##########################
+#
+# Return the path to one of the resources in the project directory.
+#
+
+def path_to_resource(s: str) -> Path:
+    '''
+    Return the path to a project resource.  Options are "notebooks" or
+    "data", im which case the return value is the path to the directory
+    containing the resources, or "gawp.toml", which returns the path to
+    the default config file.
+
+    Arguments:
+        s: the type of resource
+
+    Returns:
+        the path to the resource    
+    '''
+    source_dir = importlib.resources.files("gawp")
+    if s in {'data','notebooks'}:
+        p = source_dir.parent.parent / s
+    elif s == 'gawp.toml':
+        p = source_dir / s
+    else:
+        p = None
+    return p
+
+##########################
+#
+# Open a spreadsheet file
+#
+
+def open_spreadsheet(fn: Path) -> pd.ExcelFile:
+    '''
+    Open an XLS or XLSX spreadsheet, return the file object.
+
+    Arguments:
+        fn: the file name
+
+    Returns:
+        an open ExcelFile object
+    '''
+    return pd.ExcelFile(fn, engine='calamine')
+
+##########################
+#
+# Convert a sheet from an XLS file to a DataFrame
+#
+
+def fetch_sheet(f: pd.ExcelFile, name: str, id_cols = [], filter = []) -> pd.DataFrame:
+    '''
+    Extract a sheet from a spreadsheet, convert it to a DataFrame.  If a 
+    list of column names is supplied create an index using values from
+    those columns (the columns remain in the frame).
+
+    Arguments:
+        f: the Excel file that contains the sheet
+        name:  the name of the sheet
+        id_cols:  the namess of columns to use for the frame index
+
+    Returns:
+        a DataFrame with all the rows and columns from the sheet
+    '''
+    df = f.parse(name, header=1)
+
+    if filter:
+        df = df[df[filter[0]] == filter[1]]
+    
+    if id_cols:
+        ids = df[id_cols[0]].apply(str)
+        ids.name = ''
+        for col in id_cols[1:]:
+            s = df[col].apply(str)
+            ids += '.' + s
+        df.index = ids
+
+    return df
 
 ##########################
 #
@@ -30,6 +109,9 @@ def make_output_dir(args):
     Returns:
         the name of the output directory
     '''
+
+    # TODO -- get patterns from the config file instead of args
+    
     fn = args.output or config.output.data
     if not fn:
         raise ValueError('specify an output directory in the config file or with --output')

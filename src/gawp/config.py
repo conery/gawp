@@ -132,6 +132,8 @@ def initialize_config(text = None, fn = None):
         fn:  the name of a TOML file
     '''
 
+    # TODO:  replace fn with args as optional parameter, get input and output from there if provided
+
     # Reset the configuration to its default values (used by unit tests and notebooks)
     config.update(asdict(Config()))
 

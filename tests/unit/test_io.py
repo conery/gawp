@@ -13,7 +13,7 @@ TEST_STAGES = 'data/stages.xlsx'
 
 @pytest.fixture
 def data_file(scope='module'):
-    return pd.ExcelFile(TEST_DATA, engine='calamine')
+    return io.open_spreadsheet(TEST_DATA)
 
 @pytest.fixture
 def stage_file(scope='module'):
@@ -30,47 +30,52 @@ class TestIO:
 
     def test_read_positions(self, data_file):
         """
-        Test the function that parses the Position sheet in the XLS file
+        Parse the Positions sheet, return a frame with no index and all rows.
         """
-        sf = io.read_positions(TEST_DATA)
+        sf = io.fetch_sheet(data_file, name='Position')
         assert len(sf) == 4596
+        assert type(sf.index) == pd.RangeIndex
         assert {'Position X', 'Position Y', 'Category'} < set(sf.columns)
+        
+    def test_read_indexed_positions(self, data_file):
+        """
+        Parse the Positions sheet, use one of the columns as the index.  The index
+        is not unique, so fetching an item by index will return several rows.
+        """
+        sf = io.fetch_sheet(data_file, name='Position', id_cols=['Surpass Object'])
+        assert type(sf.index) == pd.Index
+        assert 'prg1_dk' in sf.index
+        assert len(sf.loc['prg1_dk']) == 622
 
-    def test_cell_positions(self, data_file):
+    def test_read_unique_indexed_positions(self, data_file):
         """
-        Test the get_cell_positions function, which gets x and y coordinates
-        of cells from the Position sheet and returns them in a GeoPandas frame
+        Parse the Positions sheet, use two columns as the index, each row will
+        now have a unique ID
         """
-        sf = io.read_positions(TEST_DATA)
-        df = io.get_cell_positions(sf)
-        assert type(df) == gp.geodataframe.GeoDataFrame
+        sf = io.fetch_sheet(data_file, name='Position', id_cols=['Surpass Object','ID'])
+        assert type(sf.index) == pd.Index
+        assert 'prg1_dk.1' in sf.index
+
+    def test_read_foci_positions(self, data_file):
+        """
+        The foci in the test data are in rows where the Category column is "Surface"
+        """
+        df = io.fetch_sheet(
+            data_file, 
+            name='Position', 
+            id_cols=['Surpass Object','ID'],
+            filter=['Category','Surface'])
         assert len(df) == 4579
-        assert list(df.columns) == ['id', 'point']
-        assert df['id'][0] == 'prg1_dk0'
-        assert round(df['point'][0].x,3) == 21.794 
-        assert round(df['point'][0].y,3) == 138.72
 
     def test_measurement_positions(self, data_file):
         """
-        Test the get_measurements function, which gets x and y coordinates
-        of measurement points and returns them in a GeoPandas frame
-        """
-        sf = io.read_positions(TEST_DATA)
-        df = io.get_measurement_positions(sf)
-        assert type(df) == gp.geodataframe.GeoDataFrame
-        assert len(df) == 17
-        assert list(df.columns) == ['name', 'point']
-        assert df['name'][0] == 'A'
-        assert round(df['point'][0].x,3) == 38.501
-        assert round(df['point'][0].y,3) == 141.542
+        The measurements in the test data are in rows where the Category column is "MeasurementPoint"
 
-    def test_read_stages(self, stage_file):
         """
-        Test the function that reads the stage data for the test data set
-        """
-        df = io.read_stages(TEST_STAGES)
-        row = df.loc['210924_DLW67_noAUX_HS_RAD51_AID_herm_g05_stitched']
-        assert row['TZ_start'] == 'G'
-        assert row['TZ_end'] == 'L'
-        assert row['Pachy_end'] == 'Q'
-    
+        df = io.fetch_sheet(
+            data_file, 
+            name='Position', 
+            id_cols=['Name'],
+            filter=['Category','MeasurementPoint'])
+        assert len(df) == 17
+

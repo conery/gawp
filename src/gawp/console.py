@@ -10,7 +10,7 @@ from rich.style import Style
 from rich.table import Table, Column
 from rich.theme import Theme
 
-from .config import config
+# from .config import config
 
 # Suggested colors for terminals with a light theme
 
@@ -74,6 +74,9 @@ def print_config():
     Print a table showing configuration settings.
     '''
 
+    console.print('[bold red]Broken -- needs to get settings from plugins')
+    return
+
     t = Table(
         "Section",
         "Setting",
@@ -83,33 +86,29 @@ def print_config():
         title_style='table_header',
         show_header=False,
     )
-    t.add_row("position", "sheet", config.position.sheet)
-    t.add_row("", "category_col", config.position.category_col)
-    t.add_row("", "cell_category", config.position.cell_category)
-    t.add_row("", "measurement_category", config.position.measurement_category)
+    t.add_row("io", "spreadsheets", config.io.spreadsheets)
+    t.add_row("", "output_dir", config.io.output_dir)
+    t.add_row("", "output_name", config.io.output_name)
+    t.add_row("", "log", config.io.log)
 
     t.add_section()
-    t.add_row("position.cell", "id_col_1", config.position.cell.id_col_1)
-    t.add_row("", "id_col_2", config.position.cell.id_col_2)
-    t.add_row("", "x_coord", config.position.cell.x_coord)
-    t.add_row("", "y_coord", config.position.cell.y_coord)
+    t.add_row("geometry", "sheet_name", config.geometry.sheet_name)
+    t.add_row("", "category_column", config.geometry.category_column)
+    t.add_row("", "x_coord", config.geometry.x_coord)
+    t.add_row("", "y_coord", config.geometry.y_coord)
 
     t.add_section()
-    t.add_row("position.measurement", "name_col", config.position.measurement.name_col)
-    t.add_row("", "x_coord", config.position.measurement.x_coord)
-    t.add_row("", "y_coord", config.position.measurement.y_coord)
+    t.add_row("geometry.foci", "category", config.geometry.foci.category)
+    t.add_row("", "index", str(config.geometry.foci.index))
 
     t.add_section()
-    t.add_row("meioticstage", "id_col",  config.meioticstage.id_col)
-    t.add_row("", "stage_names", str(config.meioticstage.stage_names))
+    t.add_row("geometry.measurement", "category", config.geometry.measurement.category)
+    t.add_row("", "index", str(config.geometry.measurement.index))
 
     t.add_section()
-    t.add_row("imaris", "data", config.imaris.data)
-    t.add_row("", "measurements", config.imaris.measurements)
-
-    t.add_section()
-    t.add_row("output", "data", config.output.data)
-    t.add_row("", "log", config.output.log)
+    t.add_row("meiotic_stages", "file",  config.meiotic_stages.file)
+    t.add_row("", "index", config.meiotic_stages.index)
+    t.add_row("", "stage_names", str(config.meiotic_stages.stage_names))
 
     console.print()
     console.print(t)

@@ -7,9 +7,9 @@ import logging
 from pathlib import Path
 import sys
 
-from .config import Config, initialize_config, setup
+from .config import initialize_config
 from .console import console, setup_logging, print_config
-from .linearize import linearize
+from .workflow import autorun
 
 def init_cli():
     """
@@ -27,9 +27,10 @@ def init_cli():
     subparsers = parser.add_subparsers(title='subcommands', dest='command')
 
     run_parser = subparsers.add_parser('run', help='linearize all Imaris files in the project')
-    run_parser.set_defaults(dispatch=linearize)
+    run_parser.set_defaults(dispatch=run)
     run_parser.add_argument('--file', metavar='F', nargs='+', type=Path, help='data file')
     run_parser.add_argument('--output', metavar='D', help='name of directory for output files')
+    run_parser.add_argument('--force', action='store_true', help='OK to write output in existing folder')
 
     review_parser = subparsers.add_parser('review', help='review outputs for a single germline')
     review_parser.set_defaults(dispatch=review)
@@ -38,7 +39,7 @@ def init_cli():
     status_parser = subparsers.add_parser('status', help='print project status')
     status_parser.set_defaults(dispatch=print_status)
 
-    setup_parser = subparsers.add_parser('setup', help='initialize a project')
+    # setup_parser = subparsers.add_parser('setup', help='initialize a project')
 
     if len(sys.argv) == 1:
         parser.print_usage()
@@ -52,12 +53,12 @@ def init_cli():
         parser.print_usage()
         exit(1)
 
-    if args.command == 'setup':
-        try:
-            setup(args)
-        except FileExistsError as err:
-            logging.error(f'File exists: {err}')
-        exit(0)
+    # if args.command == 'setup':
+    #     try:
+    #         setup(args)
+    #     except FileExistsError as err:
+    #         logging.error(f'File exists: {err}')
+    #     exit(0)
 
     logging.debug('command line arguments:')
     for name, val in vars(args).items():
@@ -66,7 +67,7 @@ def init_cli():
 
     return args 
 
-# Stubs for top level commands, will eventually be moved to their own source files
+# Functions called by top level commands
 
 def review(args):
     logging.info('review')
@@ -75,14 +76,17 @@ def review(args):
 def print_status(args):
     print_config()
 
+def run(args):
+    logging.debug('starting autorun')
+    initialize_config(fn=args.config)
+    autorun(args)
+
 def main():
     """
     Top level entry point
     """
     args = init_cli()
     try:
-        # todo -- pass args, not just config
-        initialize_config(args.config)
         args.dispatch(args)
     except (AssertionError, ValueError, FileNotFoundError, ModuleNotFoundError) as err:
         logging.error(err)

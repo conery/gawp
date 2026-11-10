@@ -1,20 +1,107 @@
-"""
-gawp.io
-
-Functions for reading and writing spreadsheet files and accessing module resources
-"""
+#
+#
+# Plugin and utility functions for reading and writing spreadsheet files
+#
 
 import logging
 from pathlib import Path
 import importlib.resources
+import tomllib
 
 import geopandas as gp
 import pandas as pd
 from shapely.geometry import Point
 
-from .config import config, settings
+from .plugin import Plugin
+
+class IO(Plugin):
+
+    fields = {
+        'spreadsheets': '',
+        'output_dir': '',
+        'output_name': '',
+        'log': '',
+    }
+
+    def __init__(self, toml=None, **kwargs):
+        if toml:
+            dct = tomllib.loads(toml)
+            kwargs = dct['io']
+        super().__init__(IO.fields,kwargs)
+
+    @staticmethod
+    def defaults():
+        return Plugin.defaults("io", IO.fields)
+
+    def get_spreadsheet_names(self, args=None):
+        '''
+        Return a list of names of spreasheets with Imaris data.
+
+        File names from the command line take precedence over names from the 
+        config file.  Warns the user if a file does not exist.
+
+        Arguments:
+            args:  command line arguments
+
+        Returns:
+            a list of paths to spreadsheeets
+        '''
+        if args and args.file:
+            globbed = [f.resolve() for f in args.file]
+        elif self.spreadsheets:
+            globbed = [f.resolve() for p in self.spreadsheets.split() for f in Path('.').glob(p)]
+            if len(globbed) == 0:
+                raise ValueError(f'no files match pattern from config: "{self.spreadsheets}"')
+        else:
+            raise ValueError('Specify path to input data in configuration or with --file')
+
+        res = []
+        for fn in globbed:
+            if fn.name.startswith('~'):
+                continue                    # ignore Excel temp files 🙄
+            if Path.is_dir(fn):
+                logging.warn(f'ignoring directory name {fn}; use {fn}/* to specify all files in a directory')
+                continue
+            if not Path.exists(fn):
+                logging.warn(f'file not found: {fn}')
+                continue
+            res.append(fn)
+
+        return res
+
+    def make_output_dir(self, args=None):
+        '''
+        Return the path to the directory where outputs will be written.  A name
+        specified on the command line takes precedence over a name in the config
+        file.  Creates the directory if it does not exist.
+
+        Arguments:
+            args:  command line arguments
+
+        Returns:
+            the name of the output directory
+        '''
+
+        fn = (args and args.output) or self.output_dir
+        if not fn:
+            raise ValueError('specify an output directory in the config file or with --output')
+
+        p = Path(fn).resolve()
+        try:
+            p.mkdir(parents=True, exist_ok=args.force)
+        except FileExistsError as err:
+            logging.error(f"Output folder {p} conflicts with existing folder.")
+            raise ValueError("Choose a different output name or rename/delete the existing folder.")
+
+        logging.info(f'output directory: {p}')
+        return p
+
 
 ##########################
+#
+# Utility functions, called by apps or other plugins
+#
+
 #
 # Return the path to one of the resources in the project directory.
 #
@@ -36,12 +123,12 @@ def path_to_resource(s: str) -> Path:
     if s in {'data','notebooks'}:
         p = source_dir.parent.parent / s
     elif s == 'gawp.toml':
-        p = source_dir / s
+        logging.error('TBD: print default config')
+        p = None
     else:
         p = None
     return p
 
-##########################
 #
 # Open a spreadsheet file
 #
@@ -58,7 +145,6 @@ def open_spreadsheet(fn: Path) -> pd.ExcelFile:
     '''
     return pd.ExcelFile(fn, engine='calamine')
 
-##########################
 #
 # Convert a sheet from an XLS file to a DataFrame
 #
@@ -79,6 +165,11 @@ def fetch_sheet(f: pd.ExcelFile, name: str, id_cols = [], filter = []) -> pd.Dat
     '''
     df = f.parse(name, header=1)
 
+    required_cols = set(id_cols)
+    if filter:
+        required_cols.add(filter[0])
+    assert required_cols < set(df.columns), f'sheet "{name}" is missing one or more required colums ({required_cols})'
+
     if filter:
         df = df[df[filter[0]] == filter[1]]
     
@@ -91,214 +182,3 @@ def fetch_sheet(f: pd.ExcelFile, name: str, id_cols = [], filter = []) -> pd.Dat
         df.index = ids
 
     return df
-
-##########################
-#
-# make_output_dir
-#
-
-def make_output_dir(args):
-    '''
-    Return the path to the directory where outputs will be written.  A name
-    specified on the command line takes precedence over a name in the config
-    file.  Creates the directory if it does not exist.
-
-    Arguments:
-        args:  command line arguments
-
-    Returns:
-        the name of the output directory
-    '''
-
-    # TODO -- get patterns from the config file instead of args
-    
-    fn = args.output or config.output.data
-    if not fn:
-        raise ValueError('specify an output directory in the config file or with --output')
-
-    p = Path(fn).resolve()
-    try:
-        p.mkdir(parents=True, exist_ok=True)
-    except FileExistsError as err:
-        logging.error(f"can't use {fn} for directory name; there is an existing file named {p}")
-        raise ValueError("choose a different output name or rename/delete the existing file")
-
-    logging.info(f'output directory: {p}')
-    return p
-
-##########################
-#
-# read_stages
-#
-
-def read_stages(fn=None):
-    """
-    The IDs of the measurements that mark the starts of meiotic stages are all
-    in a single spreadsheet.  Parse that spreadsheet and return it as a
-    Pandas DataFrame.
-
-    Note: the data set names in the ID column from the spreadsheet are file names.
-    The index in the new data frame is created by stripping the extension from the
-    file names.
-
-    Arguments:
-        fn: name of spreadsheet file; if None, get the name from config
-
-    Returns:
-        a data frame with stage data
-    """
-    fname = fn or config.imaris.measurements
-    if fname:
-        p = Path(fname).resolve()
-        if not p.is_file():
-            logging.warn(f'imaris.measurements "{p}": file not found')
-            res = None
-        else:
-            ID_COL = config.meioticstage.id_col
-            with pd.ExcelFile(p, engine='calamine') as f:
-                df = f.parse()
-                assert ID_COL in df.columns, f"measurements spreadsheet does not have a column named {ID_COL}"
-                df[ID_COL] = df[ID_COL].str.split('.').str[:-1].str.join('.')
-                res = df.set_index(ID_COL)
-    else:
-        logging.warn(f'config has no value for imaris.measurement')
-        res = None
-
-    if res is None:
-        logging.warn('meiotic stages will not be assigned')
-    else:
-        logging.debug(f'using meioitic stage names from {p}')
-
-    return res
-
-##########################
-#
-# get_spreadsheet_names
-#
-
-def get_spreadsheet_names(args):
-    '''
-    Return a list of names of spreasheets with Imaris data.
-
-    File names from the command line take precedence over names from the 
-    config file.  Warns the user if a file does not exist.
-
-    Arguments:
-        args:  command line arguments
-
-    Returns:
-        a list of paths to spreadsheeets
-    '''
-    if args.file:
-        globbed = [f.resolve() for f in args.file]
-    elif config.imaris.data:
-        globbed = [f.resolve() for p in config.imaris.data.split() for f in Path('.').glob(p)]
-        if len(globbed) == 0:
-            raise ValueError(f'no files match pattern from imaris.data: "{config.imaris.data}"')
-    else:
-        raise ValueError('Specify path to input data in configuration or with --file')
-
-    res = []
-    for fn in globbed:
-        if Path.is_dir(fn):
-            logging.warn(f'ignoring directory name {fn}; use {fn}/* to specify all files in a directory')
-            continue
-        if not Path.exists(fn):
-            logging.warn(f'file not found: {fn}')
-            continue
-        res.append(fn)
-
-    return res
-
-##########################
-#
-# read_positions
-#
-
-def read_positions(fn):
-    '''
-    Read location data from an XLS file exported by Imaris.  Returns a Pandas
-    data frame with all the rows from the sheet that has positions.  
-     
-    Arguments:
-        fn:  the name of the XLS file to read from
-
-    Returns:
-        a Pandas frame containing the ID, X and Y location, and category from each row
-    '''
-    sheet_name = config.position.sheet
-
-    with pd.ExcelFile(fn, engine="calamine") as f:
-        assert sheet_name in f.sheet_names, f"spreadheet is missing the '{sheet_name}' sheet"
-        sf = f.parse(sheet_name, header=1)
-
-    required_cols = { config.position.category_col }
-    required_cols |= set(settings(config.position.cell).values())
-    required_cols |= set(settings(config.position.measurement).values())
-    assert required_cols < set(sf.columns), f'sheet "{sheet_name}" is missing one or more required colums ({required_cols})'
-
-    return sf[list(required_cols)]
-
-##########################
-#
-# get_cell_positions
-#
-
-def get_cell_positions(df: pd.DataFrame):
-    '''
-    Extract the cell location data from a DataFrame created from the Position sheet in 
-    an XLS file exported by Imaris.  
-     
-    Arguments:
-        df:  the data frame with position data
-
-    Returns:
-        a GeoDataFrame containing unique IDs for each cell and a Point object with the
-        x and y coordinates of the cell.
-    '''
-    CATEGORY_COL = config.position.category_col
-    CATEGORY_VAL = config.position.cell_category
-    ID_PART_1 = config.position.cell.id_col_1
-    ID_PART_2 = config.position.cell.id_col_2
-    X_COORD = config.position.cell.x_coord
-    Y_COORD = config.position.cell.y_coord
-
-    pf = df[df[CATEGORY_COL]==CATEGORY_VAL]
-    pf.index = range(len(pf))
-
-    return gp.GeoDataFrame({
-        'id': pf[ID_PART_1] + pf[ID_PART_2].apply(str),
-        'point': [Point(pf.loc[i][X_COORD], pf.loc[i][Y_COORD]) for i in range(len(pf))]
-    }).set_geometry('point')
-
-##########################
-#
-# get_measurement_positions
-#
-
-def get_measurement_positions(df: pd.DataFrame):
-    '''
-    Extract the measurement locations from a DataFrame created from the Position sheet in 
-    an XLS file exported by Imaris.
-     
-    Arguments:
-        df:  the data frame with position data
-
-    Returns:
-        a GeoDataFrame containing unique IDs for each measurement ppint and a Point object with the
-        x and y coordinates of the measurement.
-    '''
-    CATEGORY_COL = config.position.category_col
-    CATEGORY_VAL = config.position.measurement_category
-    ID_COL = config.position.measurement.name_col
-    X_COORD = config.position.measurement.x_coord
-    Y_COORD = config.position.measurement.y_coord
-
-    pf = df[df[CATEGORY_COL]==CATEGORY_VAL]
-    pf.index = range(len(pf))
-
-    return gp.GeoDataFrame({
-        'name': pf[ID_COL],
-        'point': [Point(pf.loc[i][X_COORD], pf.loc[i][Y_COORD]) for i in range(len(pf))]
-    }).set_geometry('point')
-

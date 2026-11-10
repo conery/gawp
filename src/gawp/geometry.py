@@ -1,222 +1,214 @@
-"""
-gawp.io
-
-Functions for reading and writing spreadsheet files
-"""
+#
+#
+# Plugin for geometry calculations.  Two classes are defined here:
+#   GeoBase is the base class for the two kinds of geometry data (Foci and Measurements)
+#   Geometry defines the plugin that has methods that implement steps of the linearization algorithm
+#
 
 import logging
-from pathlib import Path
 
 import geopandas as gp
+import numpy as np
 import pandas as pd
 from shapely.geometry import Point
 
-from .config import config, settings
+from .plugin import Plugin
 
-##########################
-#
-# make_output_dir
-#
-
-def make_output_dir(args):
+class GeoBase(Plugin):
     '''
-    Return the path to the directory where outputs will be written.  A name
-    specified on the command line takes precedence over a name in the config
-    file.  Creates the directory if it does not exist.
-
-    Arguments:
-        args:  command line arguments
-
-    Returns:
-        the name of the output directory
+    Define fields found in all subclasses 
     '''
-    fn = args.output or config.output.data
-    if not fn:
-        raise ValueError('specify an output directory in the config file or with --output')
 
-    p = Path(fn).resolve()
-    try:
-        p.mkdir(parents=True, exist_ok=True)
-    except FileExistsError as err:
-        logging.error(f"can't use {fn} for directory name; there is an existing file named {p}")
-        raise ValueError("choose a different output name or rename/delete the existing file")
+    fields = {
+        'sheet_name': 'Position',
+        'category_column': 'Category',
+        'x_coord': 'Position X',
+        'y_coord': 'Position Y',
+    }
 
-    logging.info(f'output directory: {p}')
-    return p
+    def __init__(self, fields, kwargs):
+        '''
+        Combine the fields defined in the subclass with the fields defined
+        here to instantiate a subclass object.
+        '''
+        super().__init__(GeoBase.fields|fields, kwargs)
+        logging.debug(f'geobase {fields} {kwargs}')
 
-##########################
-#
-# read_stages
-#
+class Geometry:
 
-def read_stages(fn=None):
-    """
-    The IDs of the measurements that mark the starts of meiotic stages are all
-    in a single spreadsheet.  Parse that spreadsheet and return it as a
-    Pandas DataFrame.
+    def __init__(self, foci, measures):
+        '''
+        Initializations for linearization calculations.
 
-    Note: the data set names in the ID column from the spreadsheet are file names.
-    The index in the new data frame is created by stripping the extension from the
-    file names.
+        Arguments:
+            foci:  an instance of the Foci subclass
+            measures:  an instance of the Measurements subclass
+        '''
+        self.foci = foci
+        self.measurements = measures
+        self.position_frame = None
+        self.segment_frame = None
+        self.linearized_frame = None
 
-    Arguments:
-        fn: name of spreadsheet file; if None, get the name from config
+    @staticmethod
+    def defaults():
+        return Plugin.defaults("geometry", Geometry.fields)
 
-    Returns:
-        a data frame with stage data
-    """
-    fname = fn or config.imaris.measurements
-    if fname:
-        p = Path(fname).resolve()
-        if not p.is_file():
-            logging.warn(f'imaris.measurements "{p}": file not found')
-            res = None
+    def apply(self, xls):
+        '''
+        Fetch the position sheet from the XLS file, get the locations of foci,
+        return them in a data frame.
+        '''
+        self.position_frame = self.foci.apply(xls)
+        logging.info(f'  geometry.position_frame: {len(self.position_frame)} foci')
+
+        if self.measurements:
+            self.measurements_frame = self.measurements.apply(xls)
+            self.segment_frame = self.measurements.create_segments(self.measurements_frame)
+            self.measurements.add_equations(self.segment_frame)
+            logging.info(f'  geometry.measurements_frame: {len(self.measurements_frame)} points')
         else:
-            ID_COL = config.meioticstage.id_col
-            with pd.ExcelFile(p, engine='calamine') as f:
-                df = f.parse()
-                assert ID_COL in df.columns, f"measurements spreadsheet does not have a column named {ID_COL}"
-                df[ID_COL] = df[ID_COL].str.split('.').str[:-1].str.join('.')
-                res = df.set_index(ID_COL)
-    else:
-        logging.warn(f'config has no value for imaris.measurement')
-        res = None
+            logging.warn(f'  no measurements')
+        
+        return self.position_frame
 
-    if res is None:
-        logging.warn('meiotic stages will not be assigned')
-    else:
-        logging.debug(f'using meioitic stage names from {p}')
+    def linearize(self, include_stages=True):
+        '''
+        Create a frame that combines the positions with the line segments, compute
+        distances from each point to each line segment, then find the minimum distance.
+        '''
+        # If the app didn't ask for measurements just save the foci
+        if self.measurements is None:
+            self.linearized_frame = self.position_frame
+            return
 
-    return res
+        # add the index (the unique identifier for each data point) as a column named 'uid'
+        positions = self.position_frame.reset_index(names='uid')
 
-##########################
-#
-# get_spreadsheet_names
-#
+        # create all combinations of points and segments
+        product = gp.GeoDataFrame.join(positions, self.segment_frame, how="cross")
 
-def get_spreadsheet_names(args):
-    '''
-    Return a list of names of spreasheets with Imaris data.
+        # compute the distance for each combination
+        distances = self.compute_distances(product)
 
-    File names from the command line take precedence over names from the 
-    config file.  Warns the user if a file does not exist.
+        # # copy the stages column if the app uses it
+        # if include_stages:
+        #     distances['stage'] = product['stage']
 
-    Arguments:
-        args:  command line arguments
+        # find the minimum distance, save info about where the distance was found
+        merged = self.minimum_distance(distances, product)
 
-    Returns:
-        a list of paths to spreadsheeets
-    '''
-    if args.file:
-        globbed = [f.resolve() for f in args.file]
-    elif config.imaris.data:
-        globbed = [f.resolve() for p in config.imaris.data.split() for f in Path('.').glob(p)]
-        if len(globbed) == 0:
-            raise ValueError(f'no files match pattern from imaris.data: "{config.imaris.data}"')
-    else:
-        raise ValueError('Specify path to input data in configuration or with --file')
+        # append a column with the normalized locations
+        self.add_normalized_locations(merged, self.segment_frame)
 
-    res = []
-    for fn in globbed:
-        if Path.is_dir(fn):
-            logging.warn(f'ignoring directory name {fn}; use {fn}/* to specify all files in a directory')
-            continue
-        if not Path.exists(fn):
-            logging.warn(f'file not found: {fn}')
-            continue
-        res.append(fn)
+        # all done, save the result for future plugins
+        self.linearized_frame = merged.set_index('uid')
 
-    return res
+    def compute_distances(self, df: gp.GeoDataFrame):
+        '''
+        Create a new frame that summarizes the distances between nuclei and line segments.  The
+        columns in the new frame will be:
+        * `uid`, unique identifiers for foci
+        * `seg_name`, the name of the segment
+        * `distance`, the distance from the nucleus to the segment
+        * `intersection`, a string that identifies where the nucleus is closest (head, tail, middle of the segment)
+        
+        The function computes three distances for each cell/segment combination: the distance to the head of the
+        segment, the distance to the tail, and the distance to the line connecting the two.  The shortest
+        of these three is saved as the distance between the cell and the segment.
 
-##########################
-#
-# read_positions
-#
+        Arguments:
+        df: a GeoDataFrame that has the line segments and their equations
 
-def read_positions(fn):
-    '''
-    Read location data from an XLS file exported by Imaris.  Returns a Pandas
-    data frame with all the rows from the sheet that has positions.  
-     
-    Arguments:
-        fn:  the name of the XLS file to read from
+        Returns:
+        a frame with the distance values
+        '''
+        
+        pos = gp.GeoDataFrame({
+            'head': gp.GeoDataFrame.distance(df['point'],df['head']),
+            'tail': gp.GeoDataFrame.distance(df['point'],df['tail']),
+            'mid': gp.GeoDataFrame.distance(df['point'],df['segment']),
+        })
 
-    Returns:
-        a Pandas frame containing the ID, X and Y location, and category from each row
-    '''
-    sheet_name = config.position.sheet
+        res = gp.GeoDataFrame({
+            'uid': df['uid'],
+            'seg_name': df['name'],
+            'distance': pos.min(axis='columns'),
+            'intersection': pos.idxmin(axis='columns')
+        }).set_index(df.index)
 
-    with pd.ExcelFile(fn, engine="calamine") as f:
-        assert sheet_name in f.sheet_names, f"spreadheet is missing the '{sheet_name}' sheet"
-        sf = f.parse(sheet_name, header=1)
+        logging.info(f'  added distances to {len(res)} combinations')
+        return res
 
-    required_cols = { config.position.category_col }
-    required_cols |= set(settings(config.position.cell).values())
-    required_cols |= set(settings(config.position.measurement).values())
-    assert required_cols < set(sf.columns), f'sheet "{sheet_name}" is missing one or more required colums ({required_cols})'
+    def minimum_distance(self, df: gp.GeoDataFrame, cpf: gp.GeoDataFrame):
+        '''
+        Form groups in the distance frame based on cell ID, and then find the row in 
+        each group that has the shortest distance to a line segment.  Select rows from
+        the cross product that have the shortest distances, compute the intersection 
+        points, and add the distance from the start of the segment to the intersection point.
 
-    return sf[list(required_cols)]
+        Arguments:
+            df: the data frame with all distance combinations
+            cpf: the cross product frame
 
-##########################
-#
-# get_cell_positions
-#
+        Returns:
+            a frame with one row per cell along with new columns for the distances
+        '''
 
-def get_cell_positions(df: pd.DataFrame):
-    '''
-    Extract the cell location data from a DataFrame created from the Position sheet in 
-    an XLS file exported by Imaris.  
-     
-    Arguments:
-        df:  the data frame with position data
+        # define a list of names of columns to include in the result frame
+        output_cols = ['uid','seg_name','point','head','tail','distance','orientation','pathlen','loc','pathseg']
 
-    Returns:
-        a GeoDataFrame containing unique IDs for each cell and a Point object with the
-        x and y coordinates of the cell.
-    '''
-    CATEGORY_COL = config.position.category_col
-    CATEGORY_VAL = config.position.cell_category
-    ID_PART_1 = config.position.cell.id_col_1
-    ID_PART_2 = config.position.cell.id_col_2
-    X_COORD = config.position.cell.x_coord
-    Y_COORD = config.position.cell.y_coord
+        # find the row number with the minimum distance for each cell
+        locs = df.groupby('uid')[['distance']].idxmin()
 
-    pf = df[df[CATEGORY_COL]==CATEGORY_VAL]
-    pf.index = range(len(pf))
+        # make a temporary frame that has the rows from the combined frame, using the
+        # locations computed above
+        tdf = gp.GeoDataFrame(df.loc[locs.distance].join(cpf[['point','head','tail','orientation','A','C','pathlen']]))
 
-    return gp.GeoDataFrame({
-        'id': pf[ID_PART_1] + pf[ID_PART_2].apply(str),
-        'point': [Point(pf.loc[i][X_COORD], pf.loc[i][Y_COORD]) for i in range(len(pf))]
-    }).set_geometry('point')
+        # separate the rows by intersection type; compute the perpendicular intersections
+        # where the closest point is in the middle, or use one of the end points when the
+        # closest point is the head or tail.
+        mids = tdf[tdf['intersection']=='mid']
+        xp = (mids.point.y - (-mids.point.x/mids.A) - mids.C) / (mids.A - (-1/mids.A))
+        yp = (-xp/mids.A) + mids.point.y - (-mids.point.x/mids.A)
+        mids['loc'] = [Point(xp.iloc[i],yp.iloc[i]) for i in range(len(mids))]
 
-##########################
-#
-# get_measurement_positions
-#
+        heads = tdf[tdf['intersection']=='head']
+        heads['loc'] = heads['head']
 
-def get_measurement_positions(df: pd.DataFrame):
-    '''
-    Extract the measurement locations from a DataFrame created from the Position sheet in 
-    an XLS file exported by Imaris.
-     
-    Arguments:
-        df:  the data frame with position data
+        tails = tdf[tdf['intersection']=='tail']
+        tails['loc'] = tails['tail']
 
-    Returns:
-        a GeoDataFrame containing unique IDs for each measurement ppint and a Point object with the
-        x and y coordinates of the measurement.
-    '''
-    CATEGORY_COL = config.position.category_col
-    CATEGORY_VAL = config.position.measurement_category
-    ID_COL = config.position.measurement.name_col
-    X_COORD = config.position.measurement.x_coord
-    Y_COORD = config.position.measurement.y_coord
+        # concatenate the three groups into a single frame and add a column
+        # for the distance from the start of the segment to the intersection point
+        res = pd.concat([mids,heads,tails]).set_geometry('loc')
+        res['pathseg'] = gp.GeoDataFrame.distance(res['head'], res['loc'])
+        
+        logging.info(f'  minimium distances for {len(res)} cells')
+        return res[output_cols]
 
-    pf = df[df[CATEGORY_COL]==CATEGORY_VAL]
-    pf.index = range(len(pf))
+    def add_normalized_locations(self, df: gp.GeoDataFrame, sf: pd.DataFrame):
+        '''
+        Add a new column to the data set that shows the total distance from the
+        start of the germline to each intersection point, normalized by the total
+        length of the germline.
 
-    return gp.GeoDataFrame({
-        'name': pf[ID_COL],
-        'point': [Point(pf.loc[i][X_COORD], pf.loc[i][Y_COORD]) for i in range(len(pf))]
-    }).set_geometry('point')
+        Argument:
+            df: a data frame with intersection columns
+            sf: the frame with line segments
+        '''
+        scale = np.sum(sf['length'])
+        df['pathloc'] = (df['pathlen'] + df['pathseg']) / scale
+        logging.info(f'  normalized paths for {len(df)} cells')
+
+    def add_columns(self, df):
+        '''
+        Append columns collected by another plugin.  Assumes that plugin
+        uses the same indexing scheme.
+
+        Arguments:
+            df: a data frame created by another plugin
+        '''
+        self.linearized_frame = self.linearized_frame.join(df)
+        logging.info(f'  added {list(df.columns)} to position_frame')
 

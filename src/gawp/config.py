@@ -1,153 +1,93 @@
 #
 # Configuration
 #
-# Read the configuration file, make it accessible as a global
-# variable that can be imported by other modules.
+# Read the configuration file and instantiate plugins
 #
 
-from dataclasses import dataclass, asdict, field
 import logging
-import os
 from pathlib import Path
-from shutil import copy2
 import tomllib
 
-###
-#
-# This function is called to initialize a new project directory.  Copy
-# the default config file to the directory, and if the --tutorial option
-# was specified copy the tutorial data to the directory.
+from .plugin import plugins
+from .io import IO
+from .stages import Stages
+from .geometry import Geometry
+from .foci import Foci
+from .measurements import Measurements
+from .join import Join, Sheet
 
-CONFIG_FILE_NAME = 'gawp.toml'
+# Constants imported by other modules
 
-def setup(args):
-    '''
-    Initialize a new project directory.
-    '''
-
-    def copy_item(fn):
-        dest = Path.cwd() / fn
-        if dest.exists():
-            raise FileExistsError(dest)
-        src = Path(__file__).parent / fn
-        copy2(src,dest)
-        logging.info(f'{src} => {dest}')
-
-    logging.warning('Deprecated -- have app create and print a default Config')
-    copy_item(CONFIG_FILE_NAME)
-    # TBD -- copy additional items
-
-
-###
-# 
-# Configurations are saved in instances of a class named Config.  Each
-# section of the config file is defined by its own subclass.
-#
-
-@dataclass
-class Cell:
-    id_col_1: str = 'Surpass Object'
-    id_col_2: str = 'ID'                     
-    x_coord: str = 'Position X'        
-    y_coord: str = 'Position Y'       
-
-@dataclass
-class Measurement:
-    name_col: str = 'Name'           
-    x_coord: str = 'Position X'
-    y_coord: str = 'Position Y'
-
-@dataclass
-class Position:
-    sheet: str = 'Position'
-    category_col: str = 'Category'
-    cell_category: str = 'Surface'
-    measurement_category: str = 'MeasurementPoint'
-    cell: Cell = field(default_factory=Cell)
-    measurement: Measurement = field(default_factory=Measurement)
-
-@dataclass
-class MeioticStage:
-    id_col: str = 'GonadID'
-    stage_names: list[str] = field(default_factory=lambda: ['TZ_start','TZ_end','Pachy_end'])
-
-@dataclass
-class Imaris:
-    data: str = ''
-    measurements: str = ''
-
-@dataclass
-class Output:
-    data: str = ''
-    log: str = ''
-
-@dataclass
-class Config:
-    position: Position = field(default_factory=Position)
-    meioticstage: MeioticStage = field(default_factory=MeioticStage)
-    imaris: Imaris = field(default_factory=Imaris)
-    output: Output = field(default_factory=Output)
-
-    def update(self, dct):
-        '''
-        Perform a deep update, copying values from a dictionary (loaded from
-        a TOML file) into this object).
-        '''
-        Config._dfs(self, asdict(self), dct)
-
-    def _dfs(self, d1, d2):
-        '''
-        Helper function, does a depth-first traversal of the object's subclasses.
-        '''
-        for k1, v1 in d1.items():
-            if k1 in d2.keys():
-                v2 = d2[k1]
-                if isinstance(v1,dict) and isinstance(v2,dict):
-                    cls = getattr(self, k1)
-                    Config._dfs(cls, v1, v2)
-                else:
-                    setattr(self, k1, v2)
-
-def settings(cls):
-    '''
-    Return a dictionary containing all the settings of a configuration class
-    '''
-    return {k: v for k, v in asdict(cls).items() if not isinstance(v,dict)}
-
-# Create the global configuration object:
-
-config = Config()
-
-# This function will look for user settings and use them to update an existing
-# configuration
+DEFAULT_CONFIG_FILE_NAME = 'gawp.toml'
 
 def initialize_config(text = None, fn = None):
     '''
-    Update the global configuration object with settings from a string containing a 
-    TOML format specification or from a TOML file.  If both arguments are None look 
-    for a config file in the current directory.  
+    Configure the plugins usings TOML formatted specs, either from
+    text (e.g. when called from a notebook) or from a file (when
+    called from a command line app).)  
 
     Arguments:
         text: a string in TOML format
         fn:  the name of a TOML file
     '''
 
-    # TODO:  replace fn with args as optional parameter, get input and output from there if provided
+    def create_geometry_plugins(dct):
+        '''
+        Pull out the subsections for foci and measurements, instantiate those two
+        subclasses, and then save them as members of a Geometry object.  The foci
+        section is required, but measurements can be set to None if it's not in 
+        the configuration.
+        '''
+        foci_opts = dct.pop('foci', None)
+        meas_opts = dct.pop('measurements', None)
+        if foci_opts is None:
+            raise ValueError("configuration: missing [geometry.foci]")
+        fp = Foci(**(dct|foci_opts))
+        if meas_opts is None:
+            mp = None
+        else:
+            mp = Measurements(**(dct|meas_opts))
+        if bogus := [k for (k,v) in dct.items() if isinstance(v,dict)]:
+            raise ValueError(f'unknown geometry sections: {bogus}')
+        return Geometry(fp, mp)
 
-    # Reset the configuration to its default values (used by unit tests and notebooks)
-    config.update(asdict(Config()))
+    def create_join_plugins(dct):
+        sheets = []
+        for name, params in dct.items():
+            sheets.append(Sheet(**params))
+        return Join(sheets)
 
-    if text:
+    if text is not None:
         logging.debug(f'config: initializing from text')
         dct = tomllib.loads(text)
     elif cpath := find_toml_file(fn):
         logging.debug(f'config: reading configuration from {cpath}')
-        with open(cpath, 'rb') as f:
-            dct = tomllib.load(f)
+        try:
+            with open(cpath, 'rb') as f:
+                dct = tomllib.load(f)
+        except tomllib.TOMLDecodeError as err:
+            logging.error(err)
+            raise ValueError(f'Error while parsing {cpath}')
     else:
-        dct = {}
+        raise ValueError(f'initialize_config: specify text or file name')
 
-    config.update(dct)
+    err_count = 0
+    for name, fields in dct.items():
+        match name:
+            case 'io': obj = IO(**fields)
+            case 'stages': obj = Stages(**fields)
+            case 'geometry': obj = create_geometry_plugins(fields)
+            case 'join': obj = create_join_plugins(fields)
+            case _: 
+                logging.error(f'no class for {name}')
+                err_count += 1
+                continue
+        plugins.add_plugin(name, obj)
+        logging.info(f'config: added {name}')
+        logging.debug(f'  {fields}')
+
+    if err_count:
+        raise ModuleNotFoundError(f'config file has {err_count} unknown plugin names')
 
 ###
 #
@@ -165,7 +105,7 @@ def find_toml_file(fn):
             raise FileNotFoundError(f'init_config: no such file: {config_path}')
         return config_path
     
-    config_path = Path.cwd() / CONFIG_FILE_NAME
+    config_path = Path.cwd() / DEFAULT_CONFIG_FILE_NAME
     if config_path.is_file():
         return config_path
     

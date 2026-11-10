@@ -28,6 +28,7 @@ class IO(Plugin):
             dct = tomllib.loads(toml)
             kwargs = dct['io']
         super().__init__(IO.fields,kwargs)
+        self.resolved_output_path = None
 
     @staticmethod
     def defaults():
@@ -93,9 +94,22 @@ class IO(Plugin):
             logging.error(f"Output folder {p} conflicts with existing folder.")
             raise ValueError("Choose a different output name or rename/delete the existing folder.")
 
+        self.resolved_output_path = p
         logging.info(f'output directory: {p}')
         return p
 
+    def make_output_path(self, fn):
+        '''
+        Create the path to an output file using the output directory and name pattern from 
+        the config file.  Makes sure the file name ends with '.csv'.
+
+        Arguments:
+            fn: the name of spreadsheet that had the input data
+        '''
+        if self.resolved_output_path is None:
+            raise ValueError(f'app did not call make_output_dir')
+        p = self.output_name.format(fn=fn)
+        return (self.resolved_output_path / p).with_suffix('.csv')
 
 ##########################
 #

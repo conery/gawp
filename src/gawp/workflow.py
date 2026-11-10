@@ -13,8 +13,10 @@ Functions for running the linearization algorithm:
 """
 
 import argparse
+from pathlib import Path
 import logging
 
+from .console import console
 from .io import open_spreadsheet
 from .plugin import plugins
 
@@ -37,14 +39,19 @@ def autorun(args: argparse.Namespace):
     if plugins.io is None:
         raise ModuleNotFoundError('Configuration does not include [io] plugin')
     
-    output_dir = plugins.io.make_output_dir(args)
+    plugins.io.make_output_dir(args)
     if plugins.stages:
         plugins.stages.read_stage_boundaries()
 
     for fn in plugins.io.get_spreadsheet_names(args):
         res = run_workflow(fn)
-        print(res.head())
-
+        p = plugins.io.make_output_path(fn)
+        if args.preview:
+            console.print(f'[bold green]Preview of {p.stem}:')
+            console.print(res.head())
+        else:
+            logging.info(f'  writing {p}')
+            res.to_csv(p)
 
 def run_workflow(fn):
     '''
@@ -63,11 +70,10 @@ def run_workflow(fn):
     if plugins.join:
         cols = plugins.join.apply(xls_file)
         plugins.geometry.add_columns(cols)
-    print(plugins.geometry.linearized_frame.head())
     if plugins.stages:
         cols = plugins.stages.apply(fn, plugins.geometry.linearized_frame[['seg_name']])
         if cols is not None:
             plugins.geometry.add_columns(cols)
         else:
-            logging.error(f'  no meiotic stage assignments for {fn}')
+            logging.warning(f'  no meiotic stage assignments for {fn}')
     return plugins.geometry.linearized_frame

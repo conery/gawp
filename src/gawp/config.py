@@ -14,7 +14,8 @@ from .stages import Stages
 from .geometry import Geometry
 from .foci import Foci
 from .measurements import Measurements
-from .join import Join, Sheet
+from .join import Join, JoinSheet
+from .groupby import Group, GroupSheet
 
 # Constants imported by other modules
 
@@ -53,9 +54,15 @@ def initialize_config(text = None, fn = None):
 
     def create_join_plugins(dct):
         sheets = []
-        for name, params in dct.items():
-            sheets.append(Sheet(**params))
+        for params in dct.values():
+            sheets.append(JoinSheet(**params))
         return Join(sheets)
+
+    def create_group_plugins(dct):
+        sheets = []
+        for params in dct.values():
+            sheets.append(GroupSheet(**params))
+        return Group(sheets)
 
     if text is not None:
         logging.debug(f'config: initializing from text')
@@ -78,6 +85,7 @@ def initialize_config(text = None, fn = None):
             case 'stages': obj = Stages(**fields)
             case 'geometry': obj = create_geometry_plugins(fields)
             case 'join': obj = create_join_plugins(fields)
+            case 'group': obj = create_group_plugins(fields)
             case _: 
                 logging.error(f'no class for {name}')
                 err_count += 1

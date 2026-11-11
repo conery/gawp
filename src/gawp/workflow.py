@@ -68,9 +68,10 @@ def run_workflow(fn):
     xls_file = open_spreadsheet(fn)
     plugins.geometry.apply(xls_file)
     plugins.geometry.linearize()
-    if plugins.join:
-        cols = plugins.join.apply(xls_file)
-        plugins.geometry.add_columns(cols)
+    for p in [plugins.join, plugins.group]:
+        if p is not None:
+            cols = p.apply(xls_file)
+            plugins.geometry.add_columns(cols)
     if plugins.stages:
         cols = plugins.stages.apply(fn, plugins.geometry.linearized_frame[['seg_name']])
         if cols is not None:

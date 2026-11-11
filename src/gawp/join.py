@@ -11,7 +11,7 @@ from .io import fetch_sheet
 from .plugin import Plugin, plugins
 
 
-class Sheet:
+class JoinSheet:
 
     fields = {
         'sheet': '',
@@ -25,9 +25,9 @@ class Sheet:
         if toml:
             dct = tomllib.loads(toml)
             kwargs = dct['join']
-        Plugin.__init__(self,Sheet.fields,kwargs)
-        assert self.sheet, '[join] section is missing the sheet name'
-        assert self.column, '[join] section is missing the column name'
+        Plugin.__init__(self,JoinSheet.fields,kwargs)
+        for field in ['sheet','column']:
+            assert getattr(self,field), f'join section is missing a {field} value'
         try:
             for field in ['category_column','category','index']:
                 if getattr(self,field) == '':
@@ -45,10 +45,11 @@ class Join(Plugin):
         '''
         super().__init__({},{})
         self.sheets = lst
+        self.combined_frame = None
 
     @staticmethod
     def defaults():
-        return Plugin.defaults("join.x", Sheet.fields)
+        return Plugin.defaults("join.x", JoinSheet.fields)
 
     def apply(self, xls):
         '''
@@ -60,11 +61,14 @@ class Join(Plugin):
         '''
         frames = []
         for obj in self.sheets:
-            df = fetch_sheet(
-                f = xls,
-                name = obj.sheet,
-                id_cols = obj.index,
-            )
+            kwargs = {
+                'f': xls,
+                'name': obj.sheet,
+                'id_cols': obj.index,
+            }
+            if obj.category_column:
+                kwargs['filter'] = [obj.category_column, obj.category]
+            df = fetch_sheet(**kwargs)
             frames.append(df[obj.column])
             logging.debug(f'  join: added {obj.sheet}')
 

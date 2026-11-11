@@ -63,6 +63,7 @@ def run_workflow(fn):
     Returns:
         a Pandas data frame with the linearized germline
     '''
+    assert plugins.geometry, 'configuration missing geometry plugins'
     logging.info(f'[bold blue]Linearizing {fn.stem}')
     xls_file = open_spreadsheet(fn)
     plugins.geometry.apply(xls_file)

@@ -70,7 +70,6 @@ class Geometry:
         else:
             logging.warn(f'  no measurements')
         
-        return self.position_frame
 
     def linearize(self, include_stages=True):
         '''
@@ -156,7 +155,7 @@ class Geometry:
         '''
 
         # define a list of names of columns to include in the result frame
-        output_cols = ['uid','seg_name','point','head','tail','distance','orientation','pathlen','loc','pathseg']
+        output_cols = ['uid','seg_name','point','head','tail','distance','loc','orientation','pathlen','pathseg']
 
         # find the row number with the minimum distance for each cell
         locs = df.groupby('uid')[['distance']].idxmin()

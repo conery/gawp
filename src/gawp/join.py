@@ -8,7 +8,7 @@ import tomllib
 import pandas as pd
 
 from .io import fetch_sheet
-from .plugin import Plugin
+from .plugin import Plugin, plugins
 
 
 class Sheet:
@@ -16,7 +16,9 @@ class Sheet:
     fields = {
         'sheet': '',
         'column': '',
-        'index': ['Surpass Object','ID'],
+        'category_column': '',
+        'category': '',
+        'index': '',
     }
 
     def __init__(self, toml=None, **kwargs):
@@ -26,6 +28,14 @@ class Sheet:
         Plugin.__init__(self,Sheet.fields,kwargs)
         assert self.sheet, '[join] section is missing the sheet name'
         assert self.column, '[join] section is missing the column name'
+        try:
+            for field in ['category_column','category','index']:
+                if getattr(self,field) == '':
+                    setattr(self,field,getattr(plugins.geometry.foci,field))
+                    logging.debug(f'join.{self.sheet}.{field} set to default: {getattr(self,field)}')
+        except AttributeError as err:
+            logging.error(f'Join plugin for "{self.sheet}" expecting {field} attribute from geometry.foci')
+ 
 
 class Join(Plugin):
 

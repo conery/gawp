@@ -48,6 +48,44 @@
     </ul>
                   </li>
               </ul>
+              <p class="caption"><span class="caption-text">Installation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="install/">Use pip to Install GAWP</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Overview</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="overview/">Define a Workflow with Plugins</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="intro_io/">Input/Output</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="intro_geometry/">Linearization</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="intro_join/">Copy Columns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="intro_group/">Count Spots</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="intro_stages/">Meitoic Stages</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Plugins</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="io/">IO</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="geometry/">Geometry</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="join/">Join</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="group/">Group</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="stages/">Stages</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="dev/">Documentation</a>
+                  </li>
+              </ul>
       </div>
     </div>
     </nav>
@@ -78,10 +116,26 @@
 We also wanted to make it easier for users to adapt the script for new projects.</p>
 <p>The result is a new organization based on <strong>plugins</strong>.
 GAWP has a set of independent modules that perform individual steps of the analysis pipeline.
-Before running GAWP, users create a <strong>configuration file</strong> that tells the system which steps to run.</p>
-<p>The configuration file specifies which sheets to use from the Imaris spreadsheets, which columns on those sheets have the relevant data, and various other parameters.
+Before running GAWP, users create a <strong>configuration file</strong> that tells the system the plugins to use and thus which steps to run.</p>
+<p>The configuration file specifies the sheets from the Imaris output that have the data to use, which columns on those sheets have the relevant data, and various other parameters.
 The end result is that no settings are "hard wired" into the code -- everything is defined in the configuration file.
 This should make it easier for new users in the future to run the code on their own data sets (and potentially make it easier to adapt to new data formats from different versions of Imaris).</p>
+<h3 id="road-map">Road Map</h3>
+<p>The sidebar to the left shows the major sections of the documentation.</p>
+<ul>
+<li>
+<p><strong>Installation</strong> explains how to install GAWP using pip (Python's package installer)</p>
+</li>
+<li>
+<p><strong>Overview</strong> has a high-level description of what each plugin does and how to configure a notebook or script to use plugins</p>
+</li>
+<li>
+<p><strong>Plugin Reference</strong> has a detailed description of each plugin, along with a complete list of all the options</p>
+</li>
+<li>
+<p><strong>Developer</strong> has documentation for people who want to dig in to the Python code</p>
+</li>
+</ul>
 <div class="footnote">
 <hr />
 <ol>
@@ -93,6 +147,9 @@ This should make it easier for new users in the future to run the code on their 
               
             </div>
           </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="install/" class="btn btn-neutral float-right" title="Use pip to Install GAWP">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
 
   <hr/>
 
@@ -114,6 +171,8 @@ This should make it easier for new users in the future to run the code on their 
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
+    
+      <span><a href="install/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

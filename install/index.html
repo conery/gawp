@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Use pip to Install GAWP - GAWP</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../assets/_mkdocstrings.css" rel="stylesheet" />
+        <link href="../css/gawp.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Use pip to Install GAWP";
+        var mkdocs_page_input_path = "install.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GAWP
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Home</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="..">GAWP: Germline Analysis with Pandas</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Installation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Use pip to Install GAWP</a>
+    <ul class="current">
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Overview</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../overview/">Define a Workflow with Plugins</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../intro_io/">Input/Output</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../intro_geometry/">Linearization</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../intro_join/">Copy Columns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../intro_group/">Count Spots</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../intro_stages/">Meitoic Stages</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Plugins</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../io/">IO</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../geometry/">Geometry</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../join/">Join</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../group/">Group</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../stages/">Stages</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../dev/">Documentation</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GAWP</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Installation</li>
+      <li class="breadcrumb-item active">Use pip to Install GAWP</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="use-pip-to-install-gawp">Use pip to Install GAWP</h1>
+<p>GAWP is a standard Python package that can be installed using <code>pip</code>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>When pip installs GAWP it is most likely going to add a lot of new libraries to your system.
+Before you install you might want to consider creating a virtual environment.
+See <a href="#do-you-need-a-virtual-environment">Do You Need a Virtual Environment?</a> below.</p>
+</div>
+<p>Simply open a new terminal window and type this shell command:</p>
+<pre><code>$ pip install git+https://github.com/conery/gawp.git
+</code></pre>
+<p>If all the installation steps succeed you will have a new command line application named <code>gawp</code>.
+You can run it with the <code>--help</code> option to make sure everything was installed correctly:</p>
+<pre><code>$ gawp --help
+
+usage: gawp [-h] [--log X] [--preview] [--config F] {run,review,status} ...
+</code></pre>
+<p>You will also have a new module that you can import into your notebooks or Python scripts.
+For example, the IO plugin has a function that reads a sheet from an XLS file and converts it into a Pandas dataframe.
+To use this function your code could include this line:</p>
+<pre><code>from gawp.io import open_spreadsheet
+</code></pre>
+<h3 id="do-you-need-a-virtual-environment">Do You Need a Virtual Environment?</h3>
+<p>When <code>pip</code> installs GAWP it will check to make sure all of the libraries it depends on are also installed.
+Mostly these are well-known data science libraries like Pandas that you probably already have.
+But there are several that you might not have:</p>
+<ul>
+<li>
+<p>Shapely, a geography library we use for computing distances between points and line segments</p>
+</li>
+<li>
+<p>GeoPandas, a library that allows us to put Shapely objects in Pandas dataframes</p>
+</li>
+<li>
+<p>Rich, an all-around useful library for creating interfaces for command line applications</p>
+</li>
+</ul>
+<p>We strongly recommend installing GAWP in its own <strong>virtual environment</strong>.
+That will prevent several potential problems.
+For example, if you have an older version of Pandas on your system, pip will want to upgrade it, and
+that could break some other programs you have that depend on the older version.</p>
+<p>If you have recent versions of Pandas and Numpy and are not concerned with installing these new libraries
+(they're not likely to conflict with any libraries you have already) then go ahead and type the pip
+command to install GAWP.</p>
+<p>But if you're ready to take control of your Python data science environments the 
+best approach is to use a package named <a href="https://github.com/pyenv/pyenv"><code>pyenv</code></a>
+and a companion plugin named <a href="https://github.com/pyenv/pyenv-virtualenv"><code>pyenv-virtualenv</code></a>.</p>
+<p>After you create a clean new environment activate it and then type the pip command to install GAWP.
+pip will do the rest by installing Pandas and the other modules used by GAWP.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href=".." class="btn btn-neutral float-left" title="GAWP: Germline Analysis with Pandas"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../overview/" class="btn btn-neutral float-right" title="Define a Workflow with Plugins">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../overview/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

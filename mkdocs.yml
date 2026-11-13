@@ -1,0 +1,38 @@
+site_name: GAWP
+
+theme:
+  name: "readthedocs"
+
+extra_css:
+  - css/gawp.css
+
+markdown_extensions:
+  - footnotes
+  - admonition
+  - toc:
+      toc_depth: 2
+
+plugins:
+  - search
+  - mkdocstrings
+
+nav:
+  - "Home":
+    - index.md
+  - "Installation":
+    - install.md
+  - "Overview":
+    - overview.md
+    - "Input/Output": intro_io.md
+    - "Linearization": intro_geometry.md
+    - "Copy Columns": intro_join.md
+    - "Count Spots": intro_group.md
+    - "Meitoic Stages": intro_stages.md
+  - "Plugins":
+    - io.md
+    - geometry.md
+    - join.md
+    - group.md
+    - stages.md
+  - "Developer":
+    - dev.md

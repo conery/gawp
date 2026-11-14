@@ -23,6 +23,7 @@ nav:
     - install.md
   - "Overview":
     - overview.md
+    - config.md
     - "Input/Output": intro_io.md
     - "Linearization": intro_geometry.md
     - "Copy Columns": intro_join.md

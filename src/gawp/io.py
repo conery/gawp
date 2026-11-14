@@ -29,6 +29,7 @@ class IO(Plugin):
             kwargs = dct['io']
         super().__init__(IO.fields,kwargs)
         self.resolved_output_path = None
+        self.output_frame = None
 
     @staticmethod
     def defaults():
@@ -110,6 +111,26 @@ class IO(Plugin):
             raise ValueError(f'app did not call make_output_dir')
         p = self.output_name.format(fn=fn)
         return (self.resolved_output_path / p).with_suffix('.csv')
+
+    def reset_output(self):
+        '''
+        Call this method at the start of each iteration to initialize the output frame.
+        '''
+        self.output_frame = None
+
+
+    def add_columns(self, df):
+        '''
+        Append columns to the output frame.  If this is the first set of columns
+        they are used to initialize the output, otherwise they are appended to the
+        existing output.
+
+        Arguments:
+            df: a data frame created by another plugin
+        '''
+        self.output_frame = df if self.output_frame is None else self.output_frame.join(df)
+        logging.info(f'  added {list(df.columns)} to position_frame')
+    
 
 ##########################
 #

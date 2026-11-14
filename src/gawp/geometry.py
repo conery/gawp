@@ -56,8 +56,8 @@ class Geometry:
 
     def apply(self, xls):
         '''
-        Fetch the position sheet from the XLS file, get the locations of foci,
-        return them in a data frame.
+        Fetch the position sheet from the XLS file, get the locations of foci.
+        If measurements are configured fetch them.
         '''
         self.position_frame = self.foci.apply(xls)
         logging.info(f'  geometry.position_frame: {len(self.position_frame)} foci')
@@ -78,30 +78,31 @@ class Geometry:
         '''
         # If the app didn't ask for measurements just save the foci
         if self.measurements is None:
-            self.linearized_frame = self.position_frame
-            return
+            res = self.linearized_frame = self.position_frame
+        else:
+            # add the index (the unique identifier for each data point) as a column named 'uid'
+            positions = self.position_frame.reset_index(names='uid')
 
-        # add the index (the unique identifier for each data point) as a column named 'uid'
-        positions = self.position_frame.reset_index(names='uid')
+            # create all combinations of points and segments
+            product = gp.GeoDataFrame.join(positions, self.segment_frame, how="cross")
 
-        # create all combinations of points and segments
-        product = gp.GeoDataFrame.join(positions, self.segment_frame, how="cross")
+            # compute the distance for each combination
+            distances = self.compute_distances(product)
 
-        # compute the distance for each combination
-        distances = self.compute_distances(product)
+            # # copy the stages column if the app uses it
+            # if include_stages:
+            #     distances['stage'] = product['stage']
 
-        # # copy the stages column if the app uses it
-        # if include_stages:
-        #     distances['stage'] = product['stage']
+            # find the minimum distance, save info about where the distance was found
+            merged = self.minimum_distance(distances, product)
 
-        # find the minimum distance, save info about where the distance was found
-        merged = self.minimum_distance(distances, product)
+            # append a column with the normalized locations
+            self.add_normalized_locations(merged, self.segment_frame)
 
-        # append a column with the normalized locations
-        self.add_normalized_locations(merged, self.segment_frame)
+            # all done, save the result for future plugins
+            res = self.linearized_frame = merged.set_index('uid')
 
-        # all done, save the result for future plugins
-        self.linearized_frame = merged.set_index('uid')
+        return res
 
     def compute_distances(self, df: gp.GeoDataFrame):
         '''
@@ -199,15 +200,4 @@ class Geometry:
         scale = np.sum(sf['length'])
         df['pathloc'] = (df['pathlen'] + df['pathseg']) / scale
         logging.info(f'  normalized paths for {len(df)} cells')
-
-    def add_columns(self, df):
-        '''
-        Append columns collected by another plugin.  Assumes that plugin
-        uses the same indexing scheme.
-
-        Arguments:
-            df: a data frame created by another plugin
-        '''
-        self.linearized_frame = self.linearized_frame.join(df)
-        logging.info(f'  added {list(df.columns)} to position_frame')
 

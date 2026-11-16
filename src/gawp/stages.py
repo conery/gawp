@@ -28,6 +28,7 @@ class Stages(Plugin):
             kwargs = dct['stages']
         super().__init__(Stages.fields,kwargs)
         assert self.file, '[stages] section of configuration is missing the file name'
+        self.boundaries = None
         self.stage_frame = None
 
     @staticmethod
@@ -57,19 +58,19 @@ class Stages(Plugin):
 
         logging.debug(f'using meioitic stage names from {p}')
 
-        self.stage_frame = res
+        self.boundaries = res
 
     def apply(self, fn, segments):
         '''
         '''
-        if fn.stem not in self.stage_frame.index:
+        if fn.stem not in self.boundaries.index:
             return None
 
         # add a column of indexes (initially all 0) to the names
         segments['i'] = np.zeros(len(segments), dtype=int)
 
         # define a Series where values are the names of points that mark ends of stages
-        cols = self.stage_frame.loc[fn.stem][self.stage_columns]
+        cols = self.boundaries.loc[fn.stem][self.stage_columns]
 
         # iterate over the point names, updating the index of any row that has
         # a starting point past the point name
@@ -80,7 +81,8 @@ class Stages(Plugin):
         # add a column for the stage name
         segments['stage'] = segments['i'].apply(lambda n: self.stage_names[n])
 
-        return segments[['stage']]
+        self.stage_frame = segments[['stage']]
+        return self.stage_frame
 
 
     # def rename_stages(self, df):

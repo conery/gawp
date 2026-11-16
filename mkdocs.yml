@@ -8,6 +8,7 @@ extra_css:
 
 markdown_extensions:
   - footnotes
+  - def_list
   - admonition
   - toc:
       toc_depth: 2
@@ -21,19 +22,18 @@ nav:
     - index.md
   - "Installation":
     - install.md
+  - "Tutorial":
+    - tutorial.md
   - "Overview":
     - overview.md
     - config.md
-    - "Input/Output": intro_io.md
-    - "Linearization": intro_geometry.md
-    - "Copy Columns": intro_join.md
-    - "Count Spots": intro_group.md
-    - "Meitoic Stages": intro_stages.md
+    - manager_intro.md
   - "Plugins":
     - io.md
     - geometry.md
     - join.md
     - group.md
     - stages.md
+    - manager.md
   - "Developer":
     - dev.md

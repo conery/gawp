@@ -194,6 +194,7 @@ def fetch_sheet(f: pd.ExcelFile, name: str, id_cols = [], filter = []) -> pd.Dat
         f: the Excel file that contains the sheet
         name:  the name of the sheet
         id_cols:  the namess of columns to use for the frame index
+        filter:  a column name and row value for filtering rows
 
     Returns:
         a DataFrame with all the rows and columns from the sheet

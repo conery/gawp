@@ -32,11 +32,33 @@ x_coord = 'Position X'
 y_coord = 'Position Y'
 
 [geometry.foci]
+index = ['Surpass Object','ID']
+
 [geometry.measurements]
 ```
 
 The `geometry` section tells GAWP which sheet has position data and which columns on that sheet have the coordinates of foci and other objects.
-The `geometry.foci` and `geometry.measurements` sections tell GAWP to install these plugins and use the default settings.
+The `geometry.foci` and `geometry.measurements` sections tell GAWP to install these plugins and use the default settings for Measurements.
+
+### Configuring Join and Group Plugins
+
+Because a project might want to copy or group data from several different sheets the syntax for the section header is slightly different and there can be multiple sections in the configuration.
+
+To add a Join or Group plugin to a project, write the word `join` or `group`, a period, and then a name.
+The name of the sheet and the name of the column on that sheet must be specified.
+By default the Join and Group plugins expect to see the same ID columns that were used for Geometry, but it they are different the names to use instead can be specified as well.
+
+In this example a project wants to copy volume and sphericity data to the output.
+
+```
+[join.volume]
+sheet = 'Volume'
+column = 'Volume'
+
+[join.sphericity]
+sheet = 'Sphericity'
+column = 'Sphericity'
+```
 
 ## Configuration Cells in Jupyter Notebooks
 

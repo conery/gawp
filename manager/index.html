@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../img/favicon.ico" />
-    <title>Linearization - GAWP</title>
+    <title>Plugin Manager - GAWP</title>
     <link rel="stylesheet" href="../css/theme.css" />
     <link rel="stylesheet" href="../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
@@ -14,8 +14,8 @@
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Linearization";
-        var mkdocs_page_input_path = "intro_geometry.md";
+        var mkdocs_page_name = "Plugin Manager";
+        var mkdocs_page_input_path = "manager.md";
         var mkdocs_page_url = null;
       </script>
     
@@ -51,27 +51,22 @@
                   <li class="toctree-l1"><a class="reference internal" href="../install/">Use pip to Install GAWP</a>
                   </li>
               </ul>
+              <p class="caption"><span class="caption-text">Tutorial</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../tutorial/">Tutorial</a>
+                  </li>
+              </ul>
               <p class="caption"><span class="caption-text">Overview</span></p>
-              <ul class="current">
+              <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../overview/">Define a Workflow with Plugins</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../config/">Configuring Plugins</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_io/">Input/Output</a>
-                  </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Linearization</a>
-    <ul class="current">
-    </ul>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_join/">Copy Columns</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_group/">Count Spots</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_stages/">Meitoic Stages</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager_intro/">Using Plugins in An Application</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Plugins</span></p>
-              <ul>
+              <ul class="current">
                   <li class="toctree-l1"><a class="reference internal" href="../io/">IO</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../geometry/">Geometry</a>
@@ -81,6 +76,10 @@
                   <li class="toctree-l1"><a class="reference internal" href="../group/">Group</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../stages/">Stages</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Plugin Manager</a>
+    <ul class="current">
+    </ul>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Developer</span></p>
@@ -102,8 +101,8 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">Overview</li>
-      <li class="breadcrumb-item active">Linearization</li>
+          <li class="breadcrumb-item">Plugins</li>
+      <li class="breadcrumb-item active">Plugin Manager</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -112,54 +111,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h2 id="linearization">Linearization</h2>
-<p>All of the "heavy lifting" of the linearization pipeline is done in the Geometry module.</p>
-<h3 id="input-data">Input Data</h3>
-<p>The data used by this module is typically on a sheet named "Positions", such as this one from an example data set:</p>
-<p><img src="../images/geo_sheet.png" style="zoom:100%" /></p>
-<p>There three different groupings in this sheet.
-The first set of rows (highlighted in red) have "Spot" in the Category column.
-The next group (highlighted in blue) has "Surface" in the Category column, and the last group (highlighted in green) has "MeasurementPoint".</p>
-<p>The first thing the Geometry plugin does is to separate out the rows.
-In this example, it's going to ignore the spots, save the surfaces in a Pandas data frame, and save the measurements in a third frame.</p>
-<p>The plugin gets its instructions from the config file; for this project it looks like this:</p>
-<pre><code>[geometry]
-sheet_name = 'Position'
-category_column = 'Category'
-
-[geometry.foci]
-category = 'Surface'
-index = ['Surpass Object','ID']
-
-[geometry.measurements]
-category = 'MeasurementPoint'
-index = 'Name'
-</code></pre>
-<p>The first section tells the plugin where to get the position data for both frames:  it's on the sheet named "Position", and it should look in the Category column when deciding which rows to use.
-The next two sections tell the plugin to make a data frame for foci from the rows that have "Surface" in the Category column and to make a frame for measurements using rows with "MeasurementPoint" in the Category column.</p>
-<p>After the measurements are saved the plugin makes one more frame.
-This one has line segments formed by connecting adjacent measurement points.
-Here are the resuling frames that will be used in subsequent steps:</p>
-<p><img src="../images/geo_frames.png" style="zoom:70%" /></p>
-<h3 id="algorithm">Algorithm</h3>
-<p>The key step in the linearization algorithm is to compute all possible distances.
-We can do this by making a table that has every combination of data point and line segment:</p>
-<p><img src="../images/geo_cross.png" style="zoom:85%" /></p>
-<p>The next steps are:</p>
-<ul>
-<li>compute the distances and add them to the cross product frame.</li>
-<li>group the rows by IDs</li>
-<li>find the minimum distance in each group</li>
-</ul>
-<p>The final result is a data frame that has one row for each nucleus.
-In that row are the name of the nearest line segment, the point where a line from the nucleus intersects the line segment, and the total length of a path from the first measurement point up to the intersection point.</p>
-<p><img src="../images/geo_final.png" style="zoom:100%" /></p>
+                <h1 id="plugin-manager">Plugin Manager</h1>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../intro_io/" class="btn btn-neutral float-left" title="Input/Output"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../intro_join/" class="btn btn-neutral float-right" title="Copy Columns">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../stages/" class="btn btn-neutral float-left" title="Stages"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../dev/" class="btn btn-neutral float-right" title="Documentation">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -182,10 +140,10 @@ In that row are the name of the nearest line segment, the point where a line fro
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../intro_io/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../stages/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../intro_join/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../dev/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

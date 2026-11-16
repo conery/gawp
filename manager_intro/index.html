@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../img/favicon.ico" />
-    <title>Meitoic Stages - GAWP</title>
+    <title>Using Plugins in An Application - GAWP</title>
     <link rel="stylesheet" href="../css/theme.css" />
     <link rel="stylesheet" href="../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
@@ -14,8 +14,8 @@
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Meitoic Stages";
-        var mkdocs_page_input_path = "intro_stages.md";
+        var mkdocs_page_name = "Using Plugins in An Application";
+        var mkdocs_page_input_path = "manager_intro.md";
         var mkdocs_page_url = null;
       </script>
     
@@ -51,22 +51,23 @@
                   <li class="toctree-l1"><a class="reference internal" href="../install/">Use pip to Install GAWP</a>
                   </li>
               </ul>
+              <p class="caption"><span class="caption-text">Tutorial</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../tutorial/">Tutorial</a>
+                  </li>
+              </ul>
               <p class="caption"><span class="caption-text">Overview</span></p>
               <ul class="current">
                   <li class="toctree-l1"><a class="reference internal" href="../overview/">Define a Workflow with Plugins</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../config/">Configuring Plugins</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_io/">Input/Output</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_geometry/">Linearization</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_join/">Copy Columns</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_group/">Count Spots</a>
-                  </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Meitoic Stages</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Using Plugins in An Application</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#accessing-plugins">Accessing Plugins</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#running-plugins">Running Plugins</a>
+    </li>
     </ul>
                   </li>
               </ul>
@@ -81,6 +82,8 @@
                   <li class="toctree-l1"><a class="reference internal" href="../group/">Group</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../stages/">Stages</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager/">Plugin Manager</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Developer</span></p>
@@ -103,7 +106,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
           <li class="breadcrumb-item">Overview</li>
-      <li class="breadcrumb-item active">Meitoic Stages</li>
+      <li class="breadcrumb-item active">Using Plugins in An Application</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -112,12 +115,81 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h2 id="add-meiotic-stages">Add Meiotic Stages</h2>
+                <h1 id="using-plugins-in-an-application">Using Plugins in An Application</h1>
+<p>When the <code>initialize_config</code> function creates the plugins requested in a configuration file it registers them with a module called the <strong>plugin manager</strong>.
+Applications use the manager to figure out which plugins are installed, to run the plugins, and to access their outputs when they have finished.</p>
+<p>The module is named <code>plugins</code>.
+To use it, import it into your application:</p>
+<pre><code>from gawp.plugin import plugins
+</code></pre>
+<h2 id="accessing-plugins">Accessing Plugins</h2>
+<p>After the module is imported you can refer to the plugins by name, <em>e.g.</em> <code>plugins.geometry</code> or <code>plugins.stages</code>.
+These names are all defined when GAWP is first imported, but they are all set to <code>None</code>.
+After you call <code>initialize_config</code> the names are updated and will be references to the objects that implement the stage.</p>
+<p>In this example, a notebook defines a workflow that only has the three geometry plugins, so <code>plugins.stages</code> is still None
+after the setup.</p>
+<p><img src="../images/plugin_manager_demo.png" style="zoom:45%" /></p>
+<h2 id="running-plugins">Running Plugins</h2>
+<p>To execute the part of the workflow defined by a plugin call one or more methods defined in the plugin's module.
+For example, the Geometry plugin has a method named <code>apply</code>.
+It reads the positions of the foci and (if Measurements is installed) the positions of the measurement points, saving them in data frames that can be accessed later.</p>
+<p><img src="../images/plugin_manager_geo_example.png" style="zoom:80%" /></p>
+<p>The sections below have a brief overview of the plugins and methods that are most likely to be used in a Jupyter notebook.
+For more details see the complete documentation at <a href="../manager/">Plugin Manager</a>.</p>
+<h3 id="geometry">Geometry</h3>
+<dl>
+<dt><code>plugins.geometry.apply(xls_file)</code></dt>
+<dd>
+<p>Read the positions of foci and (if configured) measurments from an open XLS file.</p>
+<p>Saves the results in <code>plugins.geometry.position_frame</code> and <code>plugins.geometry.measurement_frame</code>.</p>
+</dd>
+<dt><code>plugins.geometry.linearize()</code></dt>
+<dd>
+<p>Execute the linearization algorithm.  Returns a Pandas DataFrame, indexd by data
+point ID, containing the name of the closest line segment and coordinates of
+the where a line from the point intersects the segment.  </p>
+<p>The data frame is also saved as <code>plugins.geometry.linearized_frame</code>.</p>
+</dd>
+</dl>
+<h3 id="join">Join</h3>
+<dl>
+<dt><code>plugins.join.apply(xls_file)</code></dt>
+<dd>
+<p>Create a Pandas DataFrame that has one column of output for each sheet specified in the
+configuration file.</p>
+<p>The data frame is also saved as <code>plugins.join.combined_frame</code>.</p>
+</dd>
+</dl>
+<h3 id="group">Group</h3>
+<dl>
+<dt><code>plugins.group.apply(xls_file)</code></dt>
+<dd>
+<p>Create a Pandas DataFrame that has one column of output for each sheet specified in the
+configuration file.</p>
+<p>The data frame is also saved as <code>plugins.join.grouped_frame</code>.</p>
+</dd>
+</dl>
+<h3 id="stages">Stages</h3>
+<dl>
+<dt><code>plugins.stages.apply(fn, df)</code></dt>
+<dd>
+<p>The arguments are the name <code>fn</code> of the spreadsheet <code>fn</code> and a frame <code>df</code> that is
+indexed by data point ID and has the name of the line segment closest to the
+point.  Look up the stage breaks for the file and create a Pandas DataFrame
+that has the meiotic stage for each point.</p>
+<p>The result is also saved as <code>plugins.stages.stage_frame</code></p>
+</dd>
+</dl>
+<p>Note: The names of segments are in the frame created by the Geometry plugin, in a
+column named <code>seg_name</code>.  This is how the main loop in the command line application
+calls <code>stages.apply</code>:</p>
+<pre><code>plugins.stages.apply(fn, plugins.geometry.linearized_frame[['seg_name']])
+</code></pre>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../intro_group/" class="btn btn-neutral float-left" title="Count Spots"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../config/" class="btn btn-neutral float-left" title="Configuring Plugins"><span class="icon icon-circle-arrow-left"></span> Previous</a>
         <a href="../io/" class="btn btn-neutral float-right" title="IO">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
@@ -141,7 +213,7 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../intro_group/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../config/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
       <span><a href="../io/" style="color: #fcfcfc">Next &raquo;</a></span>

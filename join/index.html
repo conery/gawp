@@ -51,21 +51,18 @@
                   <li class="toctree-l1"><a class="reference internal" href="../install/">Use pip to Install GAWP</a>
                   </li>
               </ul>
+              <p class="caption"><span class="caption-text">Tutorial</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../tutorial/">Tutorial</a>
+                  </li>
+              </ul>
               <p class="caption"><span class="caption-text">Overview</span></p>
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../overview/">Define a Workflow with Plugins</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../config/">Configuring Plugins</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_io/">Input/Output</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_geometry/">Linearization</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_join/">Copy Columns</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_group/">Count Spots</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_stages/">Meitoic Stages</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager_intro/">Using Plugins in An Application</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Plugins</span></p>
@@ -76,11 +73,17 @@
                   </li>
                   <li class="toctree-l1 current"><a class="reference internal current" href="#">Join</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#plugin-configuration">Plugin Configuration</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#api">API</a>
+    </li>
     </ul>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../group/">Group</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../stages/">Stages</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager/">Plugin Manager</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Developer</span></p>
@@ -113,7 +116,88 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="join">Join</h1>
-<!-- <img src="../images/group.png" style="zoom:100%" /> -->
+<p>The Join stage copies data without modifying it and saves it in a table that can be combined with results from other plugins.
+The configuration file specifies which sheets have the data and which columns on those sheets to copy.</p>
+<p>The name "join" comes from relational databases, where the concept originated.
+It is now standard terminology in R, Pandas, and other data science libraries that work with tabular data.
+The tables created by the Join plugin have names for data points that are compatible with the names assigned by other plugins.
+Typically this is a name formed by combining the Category and ID columns in each table.
+A join operation makes sure rows with matching IDs are aligned with each other.</p>
+<p><img src="../images/join_example.png" style="zoom:100%" /></p>
+<h2 id="plugin-configuration">Plugin Configuration</h2>
+<p>The configuration section that adds a Join plugin should have a name consisting of the word "join", a period, and a name.
+Within each section define the attributes to use for that plugin:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Default</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sheet</code></td>
+<td>(required)</td>
+<td>name of the sheet with data to join</td>
+</tr>
+<tr>
+<td><code>column</code></td>
+<td>(required)</td>
+<td>column that contains the data to copy</td>
+</tr>
+<tr>
+<td><code>category_column</code></td>
+<td><code>''</code></td>
+<td>column for filtering rows</td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td><code>''</code></td>
+<td>value for filtering rows</td>
+</tr>
+<tr>
+<td><code>index</code></td>
+<td><code>''</code></td>
+<td>names of columns for creating IDs</td>
+</tr>
+</tbody>
+</table>
+<p>The first two attributes are required.  If the remaining attributes are left out they are copied from the Geometry plugin.</p>
+<h4 id="example">Example</h4>
+<p>This configuration copies data from the Volume and Sphericity sheets, using the default column names for IDs.</p>
+<pre><code>[join.volume]
+sheet = 'Volume'
+column = 'Volume'
+
+[join.sphericity]
+sheet = 'Sphericity'
+column = 'Sphericity'
+</code></pre>
+<h2 id="api">API</h2>
+<p>The Join plugins are accessed via the <a href="../manager/">Plugin Manager</a>.</p>
+<h4 id="attributes">Attributes</h4>
+<dl>
+<dt><code>plugins.join</code></dt>
+<dd>
+<p>A reference to the top level Join plugin, which maintains a list of objects, one for each column to copy.</p>
+</dd>
+<dt><code>plugins.join.sheets</code></dt>
+<dd>
+<p>A list of JoinSheet objects, each of which has specifications for copying one column.</p>
+</dd>
+<dt><code>plugins.join.combined_frame</code></dt>
+<dd>
+<p>A Pandas DataFrame created by the <code>apply</code> method.  It has one column for each sheet copied.</p>
+</dd>
+</dl>
+<h4 id="methods">Methods</h4>
+<dl>
+<dt><code>plugins.join.apply()</code></dt>
+<dd>
+<p>Iterates over all sheets, extracting the data and saving it in the output frame.</p>
+</dd>
+</dl>
               
             </div>
           </div><footer>

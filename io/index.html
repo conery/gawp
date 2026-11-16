@@ -51,27 +51,30 @@
                   <li class="toctree-l1"><a class="reference internal" href="../install/">Use pip to Install GAWP</a>
                   </li>
               </ul>
+              <p class="caption"><span class="caption-text">Tutorial</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../tutorial/">Tutorial</a>
+                  </li>
+              </ul>
               <p class="caption"><span class="caption-text">Overview</span></p>
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../overview/">Define a Workflow with Plugins</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../config/">Configuring Plugins</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_io/">Input/Output</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_geometry/">Linearization</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_join/">Copy Columns</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_group/">Count Spots</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_stages/">Meitoic Stages</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager_intro/">Using Plugins in An Application</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Plugins</span></p>
               <ul class="current">
                   <li class="toctree-l1 current"><a class="reference internal current" href="#">IO</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#plugin-configuration">Plugin Configuration</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#open_spreadsheet">open_spreadsheet</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#fetch_sheet">fetch_sheet</a>
+    </li>
     </ul>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../geometry/">Geometry</a>
@@ -81,6 +84,8 @@
                   <li class="toctree-l1"><a class="reference internal" href="../group/">Group</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../stages/">Stages</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager/">Plugin Manager</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Developer</span></p>
@@ -113,12 +118,99 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="io">IO</h1>
-<!-- <img src="../images/group.png" style="zoom:100%" /> -->
+<p>GAWP's <code>io</code> module defines the IO plugin and several functions that can be called from notebooks that do not need to use the plugin itself.</p>
+<h2 id="plugin-configuration">Plugin Configuration</h2>
+<p>The section name to use when configuring the IO plugin is <code>[io]</code>.
+The configuration option are listed in the table below.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>spreadsheets</code></td>
+<td><code>''</code></td>
+<td>The name(s) of Imaris spreadsheets to analyze</td>
+</tr>
+<tr>
+<td><code>output_dir</code></td>
+<td><code>''</code></td>
+<td>Directory for output files</td>
+</tr>
+<tr>
+<td><code>output_name</code></td>
+<td><code>''</code></td>
+<td>A pattern to use for output files</td>
+</tr>
+<tr>
+<td><code>log</code></td>
+<td><code>''</code></td>
+<td>The name of a file for log messages</td>
+</tr>
+</tbody>
+</table>
+<h4 id="spreadsheets"><code>spreadsheets</code></h4>
+<p>The value of the <code>spreadsheets</code> option can be a single file name or a name pattern containing wildcards.</p>
+<p>Name patterns have the same syntax used in shell commands, <em>i.e.</em> they can use question marks and asterisks as wild cards.
+If the name is a pattern it is expanded and the script will process all of the files that match the pattern.</p>
+<p>File names are relative to the directory where the script is run.
+For example, the pattern <code>"../data/*"</code> means "all files in a folder named <code>data</code> in the directory above the current working directory."</p>
+<h4 id="output_dir"><code>output_dir</code></h4>
+<p>This is the name of a directory where output files will be written.
+As with spreadsheet names, the name is relative to the current directory.</p>
+<h4 id="output_name"><code>output_name</code></h4>
+<p>This parameter is a pattern to use for output files.</p>
+<p>When writing a pattern, the string <code>"{fn}"</code> will be replaced by the name of the current input file.
+For example, suppose a directory named <code>data</code> has three spreadsheets named <code>a.xls</code>, <code>b.xls</code>, and <code>c.xls</code>.
+The configuration would have <code>"data/*"</code> for <code>spreadsheets</code>.
+The pattern <code>"linear_{fn}"</code> would tell GAWP to write the outputs to <code>linear_a.xls</code>m <code>linear_b.xls</code>, and <code>linear.c.xls</code>.</p>
+<h4 id="log"><code>log</code></h4>
+<blockquote>
+<p>Not implemented yet.</p>
+</blockquote>
+<h4 id="example">Example</h4>
+<p>Ths configuration tells GAWP to process every spreadsheet (a file ending with <code>.xlsx</code>) in a directory named <code>data</code>.
+The script will create a directory named <code>output</code> in the folder where the script is run,
+and ouput files will have the same name as input files but with the word "linearized" added to the front of the name.</p>
+<pre><code>[io]
+spreadsheets = 'data/*.xlsx'
+output_dir = './output'
+output_name = 'linearized_{fn.stem}'
+</code></pre>
+<h2 id="open_spreadsheet"><code>open_spreadsheet</code></h2>
+<p>Call this function to open an Excel spreadsheet.</p>
+<p>There is only one parameter, the name of the file to open.
+The value returned is an ExcelFile object that can be passed to <code>fetch_sheet</code> to read data from the spreadsheet.</p>
+<p>The function works with either older style <code>.xls</code> files or the newer <code>.xlsx</code> format.</p>
+<h2 id="fetch_sheet"><code>fetch_sheet</code></h2>
+<p>Call <code>fetch_sheet</code> to read a sheet of data from an Excel file.
+The data will be return as a Pandas DataFrame object.</p>
+<p>The first argument passed in the call must be an ExcelFile object created by calling <code>open_spreadsheet</code>.
+The second must be the name of the sheet to read the data from.</p>
+<p>There are two additional arguments that can be passed:</p>
+<ul>
+<li>
+<p><code>id_cols</code> is a list of one or more column names.  If no column names are passed the index
+will be the integers starting from 0 (the default RangeIndex in Pandas).  If column names 
+are passed, the function will concatenate the values in those columns to create the index.</p>
+</li>
+<li>
+<p><code>filter_cols</code> will select a subset of the rows from the sheet.  Pass a list of two items:
+the name of a column and a value to filter by.  The output frame will contain only the
+rows where this value is found in the column.</p>
+</li>
+</ul>
+<h4 id="example_1">Example</h4>
+<p><img src="../images/io_example.png" style="zoom:100%" /></p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../intro_stages/" class="btn btn-neutral float-left" title="Meitoic Stages"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../manager_intro/" class="btn btn-neutral float-left" title="Using Plugins in An Application"><span class="icon icon-circle-arrow-left"></span> Previous</a>
         <a href="../geometry/" class="btn btn-neutral float-right" title="Geometry">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
@@ -142,7 +234,7 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../intro_stages/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../manager_intro/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
       <span><a href="../geometry/" style="color: #fcfcfc">Next &raquo;</a></span>

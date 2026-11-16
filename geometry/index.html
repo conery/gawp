@@ -51,21 +51,18 @@
                   <li class="toctree-l1"><a class="reference internal" href="../install/">Use pip to Install GAWP</a>
                   </li>
               </ul>
+              <p class="caption"><span class="caption-text">Tutorial</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../tutorial/">Tutorial</a>
+                  </li>
+              </ul>
               <p class="caption"><span class="caption-text">Overview</span></p>
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../overview/">Define a Workflow with Plugins</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../config/">Configuring Plugins</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_io/">Input/Output</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_geometry/">Linearization</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_join/">Copy Columns</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_group/">Count Spots</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_stages/">Meitoic Stages</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager_intro/">Using Plugins in An Application</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Plugins</span></p>
@@ -74,6 +71,12 @@
                   </li>
                   <li class="toctree-l1 current"><a class="reference internal current" href="#">Geometry</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#plugin-configurations">Plugin Configurations</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#linearization-algorithm">Linearization Algorithm</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#api">API</a>
+    </li>
     </ul>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../join/">Join</a>
@@ -81,6 +84,8 @@
                   <li class="toctree-l1"><a class="reference internal" href="../group/">Group</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../stages/">Stages</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager/">Plugin Manager</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Developer</span></p>
@@ -113,7 +118,238 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="geometry">Geometry</h1>
-<!-- <img src="../images/group.png" style="zoom:100%" /> -->
+<p>All of the "heavy lifting" of the linearization pipeline is done in the Geometry module.</p>
+<p>The data used by this module is typically on a sheet named "Positions", such as this one from an example data set:</p>
+<p><img src="../images/geo_sheet.png" style="zoom:100%" /></p>
+<p>There are three different groupings in this sheet.
+The first set of rows (highlighted in red) have "Spot" in the Category column.
+The next group (highlighted in blue) has "Surface" in the Category column, and the last group (highlighted in green) has "MeasurementPoint".</p>
+<p>For this project we want the plugin to ignore the spots, make a data point for each surface, and combine adjacent measurement points into line segments.</p>
+<h2 id="plugin-configurations">Plugin Configurations</h2>
+<p>The attributes that can be assigned in the <code>geometry</code> section of the configuration are listed in this table:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Default</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sheet_name</code></td>
+<td><code>Position</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>category_column</code></td>
+<td><code>Category</code></td>
+<td>name of column with category values</td>
+</tr>
+<tr>
+<td><code>x_coord</code></td>
+<td><code>Position X</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>x_coord</code></td>
+<td><code>Position Y</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The attributes that can be specified in <code>geometry.foci</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Default</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>category</code></td>
+<td><code>'Surface'</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>index</code></td>
+<td><code>['Surpass Object','ID']</code></td>
+<td>columns are concatenated to form data point IDs</td>
+</tr>
+</tbody>
+</table>
+<p>The attributes that can be specified in <code>geometry.measurements</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Default</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>category</code></td>
+<td><code>'MeasurementPoint'</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>index</code></td>
+<td><code>Name</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong> The <code>geometry.foci</code> and <code>geometry.measurements</code> sections "inherit" all of the attributes listed in the <code>geometry</code> section shown above.
+If a project has foci or measurements on different sheets or attributes in different columns those attributes can be overridden in these sections.</p>
+<h4 id="example">Example</h4>
+<p>The configuration section for the example uses all of the default values, so it only has to name the plugins:</p>
+<pre><code>[geometry]
+[geometry.foci]
+[geometry.measurements]
+</code></pre>
+<p>Here are the resulting frames after the data is read from the spreadsheet:</p>
+<p><img src="../images/geo_frames.png" style="zoom:70%" /></p>
+<h2 id="linearization-algorithm">Linearization Algorithm</h2>
+<p>The first step in the linearization algorithm is to compute all possible distances.
+We can start this process by making a table that has every combination of data point and line segment using an operation called the "cross product".</p>
+<p><img src="../images/geo_cross.png" style="zoom:85%" /></p>
+<p>The next steps are:</p>
+<ul>
+<li>compute the distances and add them to the cross product frame.</li>
+<li>group the rows by IDs</li>
+<li>find the minimum distance in each group</li>
+</ul>
+<p>The final result is a data frame that has one row for each nucleus.
+In that row are the name of the nearest line segment, the point where a line from the nucleus intersects the line segment, and the total length of a path from the first measurement point up to the intersection point.</p>
+<p><img src="../images/geo_final.png" style="zoom:100%" /></p>
+<h2 id="api">API</h2>
+<p>The Geometry plugin is accessed via the <a href="../manager/">Plugin Manager</a>.</p>
+<h4 id="attributes">Attributes</h4>
+<dl>
+<dt><code>plugins.geometry</code></dt>
+<dd>
+<p>A reference to the Geometry plugin.</p>
+</dd>
+<dt><code>plugins.geometry.foci</code></dt>
+<dd>
+<p>A reference to the Foci plugin.</p>
+</dd>
+<dt><code>plugins.geometry.measurements</code></dt>
+<dd>
+<p>A reference to the Measurements plugin.</p>
+</dd>
+<dt><code>plugins.geometry.position_frame</code></dt>
+<dd>
+<p>A Pandas DataFrame with the locations of the foci read from the Imaris spreadsheeet.  The frame has the following columns:</p>
+</dd>
+</dl>
+<ul>
+<li>
+<p>index: a unique ID formed by concatenating the columns defined in the <code>id_cols</code> settings in the configuration</p>
+</li>
+<li>
+<p><code>point</code>:  a GeoPandas POINT object with the coordinates of the data point.</p>
+</li>
+</ul>
+<dl>
+<dt><code>plugins.geometry.measurement_frame</code></dt>
+<dd>
+<p>A Pandas DataFrame the locations of the measurement points read from the Imaris spreadsheeet.  The frame has the following columns:</p>
+<ul>
+<li>index: the name of the measurement point</li>
+</ul>
+</dd>
+</dl>
+<ul>
+<li><code>point</code>:  a GeoPandas POINT object with the coordinates of the measurement point.</li>
+</ul>
+<dl>
+<dt><code>plugins.geometry.segment_frame</code></dt>
+<dd>
+<p>A Pandas DataFrame with descriptions of line segments formed by connecting adjacent measurement points.  The frame has the following columns:</p>
+<ul>
+<li>
+<p>index:  the name of the line segment, formed by concatenating two measurement point IDs</p>
+</li>
+<li>
+<p><code>head</code>: the point at the start of the segment</p>
+</li>
+<li>
+<p><code>tail</code>: the point at the end of the segment</p>
+</li>
+<li>
+<p><code>segment</code>: a GeoPandas LINESTRING object with the head and tail of the segment</p>
+</li>
+<li>
+<p><code>orientation</code>:  a string (NW, NE, SE, SW) intended to be used by visualizaation algorithms</p>
+</li>
+<li>
+<p><code>A</code> and <code>C</code>: parameters of the linear equation of the segment</p>
+</li>
+<li>
+<p><code>length</code>: the length of the segment</p>
+</li>
+<li>
+<p><code>pathlen</code>: the sum of distances from the start of the first segment to the start of this segment</p>
+</li>
+</ul>
+</dd>
+<dt><code>plugins.geometry.linearized_frame</code></dt>
+<dd>
+<p>A Pandas DataFrame with the output of the linearization algorithm.  The frame has the following columns:</p>
+<ul>
+<li>
+<p>index: the name of a data point</p>
+</li>
+<li>
+<p><code>seg_name</code>: the ID of the line segment closest to the point</p>
+</li>
+<li>
+<p><code>point</code>: the coordinates of the data point</p>
+</li>
+<li>
+<p><code>head</code>: the of the closest line segment</p>
+</li>
+<li>
+<p><code>tail</code>: the tail of the closest line segment</p>
+</li>
+<li>
+<p><code>distance</code>: the distance from the data point to the line segment</p>
+</li>
+<li>
+<p><code>loc</code>: the point on the segment that is closest to the data point</p>
+</li>
+<li>
+<p><code>orientation</code>: a string (NW, NE, SE, SW) intended to be used by visualizaation algorithms</p>
+</li>
+<li>
+<p><code>pathlen</code>: the sum of distances from the start of the first segment to the start of the segments closest to the point</p>
+</li>
+<li>
+<p><code>pathseg</code>: the distance from the start of the segment to the location where a line from the data point intersects the segment</p>
+</li>
+<li>
+<p><code>pathloc</code>: the normalized distance from the start of the first segment to the location where the data point intersects the segment</p>
+</li>
+</ul>
+</dd>
+</dl>
+<h4 id="methods">Methods</h4>
+<dl>
+<dt><code>plugins.geometry.apply(xls_file)</code></dt>
+<dd>
+<p>Read the positions of foci and measurments from an open XLS file.</p>
+</dd>
+<dt><code>plugins.geometry.linearize()</code></dt>
+<dd>
+<p>Execute the linearization algorithm.  If a Measurement plugin is configured
+the output is a frame that has the closest line segment to each data point,
+otherwise the output is just a referencee to the positions of the points.</p>
+</dd>
+</dl>
               
             </div>
           </div><footer>

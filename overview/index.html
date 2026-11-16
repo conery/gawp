@@ -51,6 +51,11 @@
                   <li class="toctree-l1"><a class="reference internal" href="../install/">Use pip to Install GAWP</a>
                   </li>
               </ul>
+              <p class="caption"><span class="caption-text">Tutorial</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../tutorial/">Tutorial</a>
+                  </li>
+              </ul>
               <p class="caption"><span class="caption-text">Overview</span></p>
               <ul class="current">
                   <li class="toctree-l1 current"><a class="reference internal current" href="#">Define a Workflow with Plugins</a>
@@ -59,15 +64,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../config/">Configuring Plugins</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_io/">Input/Output</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_geometry/">Linearization</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_join/">Copy Columns</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_group/">Count Spots</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../intro_stages/">Meitoic Stages</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager_intro/">Using Plugins in An Application</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Plugins</span></p>
@@ -81,6 +78,8 @@
                   <li class="toctree-l1"><a class="reference internal" href="../group/">Group</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../stages/">Stages</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager/">Plugin Manager</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Developer</span></p>
@@ -161,15 +160,57 @@
 </tbody>
 </table>
 <p>Each application decides which of these plugins to install.
-A minimal workflow might use only Geometry, Foci, and Join in order to create a table that has positions of cells and their attributes, skipping the linearization step.
+A minimal workflow might use only Geometry, Foci, and Join in order to create a table that has positions of foci and their attributes, skipping the linearization step.
 At the other extreme, a project can use all of the plugins to implement the full linearization pipeline.</p>
-<p>This Overview section has short descriptions of each plugin and examples of workflows that use them.
-Complete details are in the Plugins section.</p>
+<p>The sections below have short descriptions of each plugin.
+Complete details are in the Plugins section (linked in the menu bar on the left).</p>
+<h3 id="io">IO</h3>
+<p>Jupyter notebooks and command line applications all need to open XLS files exported from Imaris, read data from different sheets inside those spreadsheets, and save results.
+But notebooks and scripts have different requirements.</p>
+<ul>
+<li>
+<p>Someone using a notebook can focus in a single data set, often to explore how different steps of the workflow apply to that data. They can tell GAWP which spreadsheet they want to open and tell it exactly what they want it to do with that notebook.  The results of different steps are displayed in the notebook, and that may be all the user needs to see -- there is no need to write the results to a file.</p>
+</li>
+<li>
+<p>A user running GAWP from the command line has different goals.  They know exactly what the steps are, and they want GAWP to apply those steps to several different spreadsheets, maybe even every spreadsheet in a folder exported by Imaris.  They also want the results of running the pipeline saved in a new directory, where output file names are derived from the input file names.  They also might want to have GAWP generate a log file so there is a record of what it did.</p>
+</li>
+</ul>
+<p>GAWP's <code>io</code> module supports both of these use cases. The <strong>plugin named IO</strong> is used by command line applications to manage interactions with multiple spreadsheets. The module also defines <strong>standalone functions</strong>, such as <code>parse_spreadsheet</code>, that can be called from notebooks.
+Not surprisingly, the plugin calls the standalone functions -- it's goal is to automate the workflow by calling these functions automatically for every spreadsheet the user wants to analyze.</p>
+<h3 id="geometry-foci-and-measurements">Geometry, Foci, and Measurements</h3>
+<p>The locations of foci, measurements, and other items are typically saved on the "Positions" sheet of spreadsheets exported by Imaris.
+GAWP's Geometry plugin reads and organizes this data.</p>
+<p>To use some terminology from object-oriented programming, Geometry is the <strong>base</strong> class, and Foci and Measurements are <strong>derived</strong> classes.
+The Geometry plugin has operations common to all items on the "Positions" sheet: the name of the sheet, the name of the column used to distinguish foci from the other items, and the $x$ and $y$ locations of the data.</p>
+<p>Foci and Measurements have operations specific to those types of data:</p>
+<ul>
+<li>
+<p>foci are saved an initial data frame that will be used as input to the linearization algorithm</p>
+</li>
+<li>
+<p>measurement points are saved in a data frame, and then another frame, holding line segments, is built by connecting adjacent measurements</p>
+</li>
+</ul>
+<p>If a project works with foci the configuruation needs to include both the Geometry and Foci plugins.
+If Measurements plugin is included in the configuration the linearization algorithm will be called.</p>
+<p>The final result computed by the Geometry plugins will be a data frame that is indexed by the names of foci and with columns for the $x$ and $y$ locations and other attributes of the foci.</p>
+<p>As the remaining plugins are executed they will columns to the table.</p>
+<h3 id="join">Join</h3>
+<p>If an Imaris spreadhseet has additional data besides positions of foci this other data can be copied to the output with a Join plugin.</p>
+<p>A project might want to copy several different types of data, which means the configuration can have several different <code>join</code> sections.</p>
+<p>A key point is the other sheets must have the same columns used to create IDs for the foci.
+The Join plugin will read another sheet, find the column requested in the configuration, and adds it to the output frame.</p>
+<h3 id="group">Group</h3>
+<p>The Group plugin is similar to Join, but it has a twist.
+After reading the data from the specified sheet, the rows are grouped and then an "aggregation function" is applied to each group.
+The result of the aggregation is added as a new column in the output frame.</p>
+<h3 id="stages">Stages</h3>
+<p>If a project has a spreadsheet that defines meiotic stages the Stages plugin will use that spreadsheet to add a new column to the output frame.</p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../install/" class="btn btn-neutral float-left" title="Use pip to Install GAWP"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../tutorial/" class="btn btn-neutral float-left" title="Tutorial"><span class="icon icon-circle-arrow-left"></span> Previous</a>
         <a href="../config/" class="btn btn-neutral float-right" title="Configuring Plugins">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
@@ -193,7 +234,7 @@ Complete details are in the Plugins section.</p>
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../install/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../tutorial/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
       <span><a href="../config/" style="color: #fcfcfc">Next &raquo;</a></span>

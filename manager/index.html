@@ -112,6 +112,60 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="plugin-manager">Plugin Manager</h1>
+<p>The Plugin Manager is a module that keeps track of which plugins have been installed for an application.</p>
+<p>GAWP defines a global variable named <code>plugins</code> that can be accessed by all of the modules in GAWP and by applications.
+As the <code>initialize_config</code> function creates plugins they are registered with the plugin manager, where they become accessible as attributes of the <code>plugins</code> object.</p>
+<p>All of the attributes are initially set to <code>None</code>.
+An application can check to see if a plugin was installed by testing the value of an attribute, <em>e.g.</em></p>
+<pre><code>if plugins.join is not None:
+    # do something with joins
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Plugin</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plugins.io</code></td>
+<td>IO</td>
+<td>required by command line applications</td>
+</tr>
+<tr>
+<td><code>plugins.geometry</code></td>
+<td>Geometry</td>
+<td></td>
+</tr>
+<tr>
+<td><code>plugins.geometry.foci</code></td>
+<td>Foci</td>
+<td></td>
+</tr>
+<tr>
+<td><code>plugins.geometry.measurements</code></td>
+<td>Measurements</td>
+<td></td>
+</tr>
+<tr>
+<td><code>plugins.join</code></td>
+<td>Join</td>
+<td>a list of JoinSheet objects</td>
+</tr>
+<tr>
+<td><code>plugins.group</code></td>
+<td>Group</td>
+<td>a list of GroupSheet objects</td>
+</tr>
+<tr>
+<td><code>plugins.stages</code></td>
+<td>Stages</td>
+<td></td>
+</tr>
+</tbody>
+</table>
               
             </div>
           </div><footer>

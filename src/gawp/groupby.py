@@ -19,7 +19,7 @@ class GroupSheet:
         'category_column': '',
         'category': '',
         'group': '',
-        'aggregation_function': '',
+        'aggregation_function': 'count',
         'aggregation_name': '',
         'index': '',
     }

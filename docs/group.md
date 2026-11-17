@@ -5,8 +5,6 @@
 The Group stage summarizes the data in one of the sheets to produce counts.
 The process is best explained using a sheet from one of the example data sets.
 
-### Input Data
-
 A sheet named "Intensity Max Ch=4 Img=1" has a table that connects spots to surfaces.
 This is what the sheet looks like in Excel:
 
@@ -26,7 +24,7 @@ Other spots below that have 9, 10, or 11 in the leftmost column, meaning they ar
 
 ### Algorithm
 
-The Group stage gets its name from `groupby`, the Pandas operation that summarizes the data and produces the counts.
+The Group stage gets its name from `groupby`, another concept borrowed from relational databases and widely used in Pandas and other data science libraries.
 The main steps in this plugin are:
 
 1. Split the sheet into two parts and make two data frames, one for surfaces and one for spots
@@ -47,10 +45,25 @@ The yellow shading highlights the fact that the join is using the column named "
 
 <img src="../images/group_final.png" style="zoom:100%" />
 
-### Configuring the Group Plugin
+## Plugin Configuration
 
-This grouping operation can be generalized to apply to other data sets, as well.
-The configuration section for the plugin needs to specify the name of the sheet to use, the names of the columns that divide the sheet into the main data and the rows to use for groups, and the name of the output column.
+The configuration section that adds a Group plugin should have a name consisting of the word "group", a period, and a name.
+Within each section define the attributes to use for that plugin:
+
+| Attribute | Default | Note |
+| -- | -- | -- |
+| `sheet` | (required) | name of the sheet with data to join |
+| `column` | (required) | column that contains the data to copy |
+| `category_column` | `''` | column for filtering rows |
+| `category` | `''` | value for filtering rows |
+| `group` |  (required) | the value for rows to group by |
+| `aggregation_function` |  `count` | |
+| `aggregation_name` |  (required) | name for the output column |
+| `index` | `''` | names of columns for creating IDs |
+
+If the `category_column`, `category`, or `index` attributes are left out they are copied from the Geometry plugin.
+
+#### Example
 
 This is the configuration section that was used for the example data shown above:
 
@@ -65,6 +78,26 @@ aggregation_function = 'count'
 aggregation_name = 'RAD51'
 ```
 
-The full details of all of the options and their default values is in the documentation of the [Group Plugin](group.md).
-
 <img src="../images/group.png" style="zoom:100%" />
+
+## API
+
+The Group plugins are accessed via the [Plugin Manager](manager.md).
+
+`plugins.group`
+
+:   A reference to the top level Group plugin, which maintains a list of objects, one for each group to create.
+
+`plugins.group.sheets`
+
+:   A list of GroupSheet objects, each of which has specifications for grouping one column.
+
+`plugins.join.grouped_frame`
+
+:   A Pandas DataFrame created by the `apply` method.  It has one column for each group created.
+
+#### Methods
+
+`plugins.group.apply()`
+
+:   Iterates over all sheets, extracting the data, forming groups, and saving them in the output frame.

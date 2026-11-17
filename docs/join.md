@@ -41,6 +41,11 @@ sheet = 'Sphericity'
 column = 'Sphericity'
 ```
 
+Here is the frame produced by the stage, with columns ready to be included in the final output:
+
+<img src="../images/join_output.png" style="zoom:45%" />
+
+
 ## API
 
 The Join plugins are accessed via the [Plugin Manager](manager.md).

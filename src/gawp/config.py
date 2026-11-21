@@ -44,24 +44,29 @@ def initialize_config(text = None, fn = None):
         if foci_opts is None:
             raise ValueError("configuration: missing [geometry.foci]")
         fp = Foci(**(dct|foci_opts))
+        logging.debug(f'  config: geometry.foci')
         if meas_opts is None:
             mp = None
         else:
             mp = Measurements(**(dct|meas_opts))
+            logging.debug(f'  config: geometry.measurements')
         if bogus := [k for (k,v) in dct.items() if isinstance(v,dict)]:
             raise ValueError(f'unknown geometry sections: {bogus}')
+
         return Geometry(fp, mp)
 
     def create_join_plugins(dct):
         sheets = []
         for params in dct.values():
             sheets.append(JoinSheet(**params))
+            logging.debug(f'  config: join {params}')
         return Join(sheets)
 
     def create_group_plugins(dct):
         sheets = []
         for params in dct.values():
             sheets.append(GroupSheet(**params))
+            logging.debug(f'  config: group {params}')
         return Group(sheets)
 
     if text is not None:
@@ -92,8 +97,12 @@ def initialize_config(text = None, fn = None):
                 continue
         plugins.add_plugin(name, obj)
         logging.info(f'config: added {name}')
-        logging.debug(f'  {fields}')
 
+    # Add a default IO plugin if one was not specified
+    if plugins.io is None:
+        logging.debug(f'adding default IO plugin')
+        plugins.add_plugin('io', IO())
+        
     if err_count:
         raise ModuleNotFoundError(f'config file has {err_count} unknown plugin names')
 

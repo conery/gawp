@@ -67,8 +67,8 @@ class Geometry:
             self.segment_frame = self.measurements.create_segments(self.measurements_frame)
             self.measurements.add_equations(self.segment_frame)
             logging.info(f'  geometry.measurements_frame: {len(self.measurements_frame)} points')
-        else:
-            logging.warn(f'  no measurements')
+        # else:
+        #     logging.warn(f'  no measurements')
         
 
     def linearize(self, include_stages=True):

@@ -21,15 +21,15 @@ def init_cli():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('--log', metavar='X', choices=['quiet','info','debug'], default='info')
-    parser.add_argument('--preview', action='store_true')
-    parser.add_argument('--config', metavar='F', help='TOML file with configuration settings')
     
     subparsers = parser.add_subparsers(title='subcommands', dest='command')
 
     run_parser = subparsers.add_parser('run', help='linearize all Imaris files in the project')
     run_parser.set_defaults(dispatch=run)
+    run_parser.add_argument('--config', metavar='F', help='TOML file with configuration settings')
     run_parser.add_argument('--file', metavar='F', nargs='+', type=Path, help='data file')
     run_parser.add_argument('--output', metavar='D', help='name of directory for output files')
+    run_parser.add_argument('--preview', action='store_true')
     run_parser.add_argument('--force', action='store_true', help='OK to write output in existing folder')
 
     review_parser = subparsers.add_parser('review', help='review outputs for a single germline')

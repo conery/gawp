@@ -35,23 +35,24 @@ def autorun(args: argparse.Namespace):
         args:  command line arguments
     '''
 
-    # A command line script needs the IO plugin, make sure it was installed
-    if plugins.io is None:
-        raise ModuleNotFoundError('Configuration does not include [io] plugin')
-    
-    plugins.io.make_output_dir(args)
+    if not args.preview:
+        plugins.io.make_output_dir(args)
+
     if plugins.stages:
         plugins.stages.read_stage_boundaries()
 
     for fn in plugins.io.get_spreadsheet_names(args):
         res = run_workflow(fn)
-        p = plugins.io.make_output_path(fn)
         if args.preview:
-            console.print(f'[bold green]Preview of {p.stem}:')
+            console.print(f'[bold green]Preview for {fn.stem}:')
             console.print(res.head())
         else:
+            p = plugins.io.make_output_path(fn)
             logging.info(f'  writing {p}')
-            res.to_csv(p)
+            if res is None:
+                logging.warn(f'  empty output frame, file not written')
+            else:
+                res.to_csv(p)
 
 def run_workflow(fn):
     '''

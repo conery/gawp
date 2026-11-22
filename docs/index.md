@@ -21,7 +21,9 @@ The sidebar to the left shows the major sections of the documentation.
 
 - **Installation** explains how to install GAWP using pip (Python's package installer)
 
-- **Overview** has a high-level description of what each plugin does and how to configure a notebook or script to use plugins
+- There are **Tutorials** for running GAWP from the command line or in a Jupyter notebook
+
+- **Overview** describes how to configure a notebook or script and how to use plugins
 
 - **Plugin Reference** has a detailed description of each plugin, along with a complete list of all the options
 

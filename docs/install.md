@@ -2,7 +2,7 @@
 
 GAWP is a standard Python package that can be installed using `pip`.
 
-!!! tip
+!!! tip "Reduce the Noise Level"
     When pip installs GAWP it is most likely going to add a lot of new libraries to your system.
     Before you install you might want to consider creating a virtual environment.
     See [Do You Need a Virtual Environment?](#do-you-need-a-virtual-environment) below.

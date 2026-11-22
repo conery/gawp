@@ -40,16 +40,18 @@ def initialize_config(text = None, fn = None):
         the configuration.
         '''
         foci_opts = dct.pop('foci', None)
-        meas_opts = dct.pop('measurements', None)
         if foci_opts is None:
-            raise ValueError("configuration: missing [geometry.foci]")
+            raise ValueError("configuration: missing geometry.foci")
         fp = Foci(**(dct|foci_opts))
         logging.debug(f'  config: geometry.foci')
+
+        meas_opts = dct.pop('measurements', None)
         if meas_opts is None:
             mp = None
         else:
             mp = Measurements(**(dct|meas_opts))
             logging.debug(f'  config: geometry.measurements')
+            
         if bogus := [k for (k,v) in dct.items() if isinstance(v,dict)]:
             raise ValueError(f'unknown geometry sections: {bogus}')
 

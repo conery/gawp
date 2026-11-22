@@ -1,6 +1,6 @@
 # Define a Workflow with Plugins
 
-GAWP is organized as a set of **plugin modules** that carry out individual steps of the full linaerization workflow.
+GAWP is organized as a set of **plugin modules** that carry out individual steps of the full linearization workflow.
 
 | Plugin Name | Module Name | Resonsibilities |
 | -- | -- | -- |

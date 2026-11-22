@@ -22,8 +22,17 @@ nav:
     - index.md
   - "Installation":
     - install.md
-  - "Tutorial":
-    - tutorial.md
+  - "Tutorials":
+    - "Command Line":
+      - "Introduction": tutorial_cli.md
+      - "The gawp Command": tutorial_cli_command.md
+      - "Configuration File": tutorial_cli_config.md
+      - "Input Files": tutorial_cli_files.md
+      - "Joins": tutorial_cli_join.md
+      - "Output Files": tutorial_cli_output.md
+      - "Review and Summary": tutorial_cli_summary.md
+    - "Jupyter Notebook":
+      - tutorial_jupyter.md
   - "Overview":
     - overview.md
     - config.md

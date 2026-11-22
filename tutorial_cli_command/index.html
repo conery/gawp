@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>The gawp Command - GAWP</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../assets/_mkdocstrings.css" rel="stylesheet" />
+        <link href="../css/gawp.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "The gawp Command";
+        var mkdocs_page_input_path = "tutorial_cli_command.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GAWP
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Home</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="..">GAWP: Germline Analysis with Pandas</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Installation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../install/">Use pip to Install GAWP</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Tutorials</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" >Command Line</a>
+    <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli/">Introduction</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="#">The gawp Command</a>
+    <ul class="current">
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_config/">Configuration File</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_files/">Input Files</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_join/">Joins</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_output/">Output Files</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_summary/">Review and Summary</a>
+                </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Jupyter Notebook</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_jupyter/">Use GAWP in a Jupyter Notebook</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Overview</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../overview/">Define a Workflow with Plugins</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../config/">Configuring Plugins</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager_intro/">Using Plugins in An Application</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Plugins</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../io/">IO</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../geometry/">Geometry</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../join/">Join</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../group/">Group</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../stages/">Stages</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager/">Plugin Manager</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../dev/">Documentation</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GAWP</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Tutorials</li>
+          <li class="breadcrumb-item">Command Line</li>
+      <li class="breadcrumb-item active">The gawp Command</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="the-gawp-command">The <code>gawp</code> Command</h2>
+<p>Like most shell commands we run <code>gawp</code> by typing its name followed by various options and arguments.</p>
+<p>Type this to see the "usage" message:</p>
+<pre><code>$ gawp --help
+usage: gawp [-h] [--log X] {run,review,status} ...
+
+options:
+  -h, --help           show this help message and exit
+  --log X
+...
+</code></pre>
+<p>The output shows that <code>gawp</code> has <strong>subcommands</strong> named <code>run</code>, <code>review</code>, and <code>status</code>.
+We'll focus on the first one in this tutorial since it's the command that runs a workflow.</p>
+<p>So now we can see that to run <code>gawp</code>, we type <code>gawp</code>, then the name of the subcommand, and then any options or arguments for that subcommand.
+To see the full list of options for the <code>run</code> subcommand type this:</p>
+<pre><code>$ gawp run --help
+usage: gawp run [-h] [--config F] [--file F [F ...]] [--output D] [--preview] [--force]
+  ...
+</code></pre>
+<p>Two options to learn first are <code>--file</code>, and <code>--preview</code>.</p>
+<!-- - `--config` tells `gawp` where to find the specification of which plugins to use in the workflow.
+The default is `gawp.toml` in the current directory. -->
+
+<ul>
+<li>
+<p><code>--file</code> is the name of the input file (Imaris spreadsheet) that has the data to analyze</p>
+</li>
+<li>
+<p><code>--preview</code> tells the script to print the first few lines of the output on terminal (instead of saving the output in a file)</p>
+</li>
+</ul>
+<p>We'll introduce the remaining options as we progress through the tutorial.</p>
+<p>Go ahead and type the command shown below.
+It will run the sample workflow on a single spreadsheet named <code>herm_5.xlsx</code>:</p>
+<pre><code>$ gawp run --preview --file data/herm_5.xlsx 
+...                                                                                                                                       
+Preview for herm_5:
+                          point                               
+pdk.123  POINT (19.469 128.836)
+pdk.174   POINT (1.258 138.006)
+pdk.293  POINT (21.258 112.538)
+...
+</code></pre>
+<div class="admonition note">
+<p class="admonition-title">Reduce the Noise Level</p>
+<p><code>gawp</code> printed a lot of messages to the terminal along with that output.  If you want to turn off these messages type <code>--log quiet</code> after <code>gawp</code> and before <code>run</code>:</p>
+<p><code>$ gawp --log quiet run --preview ...</code></p>
+<p>At the other extreme, if you want more information, use <code>--log debug</code>.
+Debug messages are mainly for developers but they might have some useful information if <code>gawp</code> is not doing what you expect it to.</p>
+<p><strong>Important:</strong>  if you use <code>--log</code> notice where it goes on the command line, after <code>gawp</code> but before <code>run</code>.</p>
+</div>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../tutorial_cli/" class="btn btn-neutral float-left" title="Introduction"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../tutorial_cli_config/" class="btn btn-neutral float-right" title="Configuration File">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../tutorial_cli/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../tutorial_cli_config/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

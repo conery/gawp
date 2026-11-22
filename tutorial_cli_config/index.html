@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Configuration File - GAWP</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../assets/_mkdocstrings.css" rel="stylesheet" />
+        <link href="../css/gawp.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Configuration File";
+        var mkdocs_page_input_path = "tutorial_cli_config.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GAWP
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Home</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="..">GAWP: Germline Analysis with Pandas</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Installation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../install/">Use pip to Install GAWP</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Tutorials</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" >Command Line</a>
+    <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli/">Introduction</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_command/">The gawp Command</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="#">Configuration File</a>
+    <ul class="current">
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_files/">Input Files</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_join/">Joins</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_output/">Output Files</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_summary/">Review and Summary</a>
+                </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Jupyter Notebook</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_jupyter/">Use GAWP in a Jupyter Notebook</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Overview</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../overview/">Define a Workflow with Plugins</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../config/">Configuring Plugins</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager_intro/">Using Plugins in An Application</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Plugins</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../io/">IO</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../geometry/">Geometry</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../join/">Join</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../group/">Group</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../stages/">Stages</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager/">Plugin Manager</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../dev/">Documentation</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GAWP</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Tutorials</li>
+          <li class="breadcrumb-item">Command Line</li>
+      <li class="breadcrumb-item active">Configuration File</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="the-configuration-file">The Configuration File</h2>
+<p>GAWP configurations use a file format named TOML.
+TOML files are plain text and can be opened with any text editor.
+Go ahead and open <code>gawp.toml</code> now.</p>
+<p>Our intial configuration file has just one line:</p>
+<pre><code>[geometry.foci]
+</code></pre>
+<p>That line is a <strong>section header</strong>.
+It has the name of a plugin enclosed in square brackets.</p>
+<p>The fact that there is only one plugin name in this configuration file means <code>gawp</code> will execute only this one step when we run it.
+This plugin fetches the locations of foci from a Position sheet; a workflow that consists of just this step will simply read the positions and write them to the output file.</p>
+<div class="admonition info">
+<p class="admonition-title">Section Names Define Plugins</p>
+<p>The important message to take away from this part of the tutorial is that <code>gawp</code> will run only the plugins that appear as section headers in the configuration file.</p>
+</div>
+<p>Let's add another step to the workflow.
+Add the following lines:</p>
+<pre><code>[geometry.measurements]
+sheet_name = 'Position'
+category_column = 'Category'
+category = 'MeasurementPoint'
+</code></pre>
+<p>The lines below the section heading specify options for the plugin.
+Options are lines that look like Python assignment statements: they have a setting name, an equal sign, and a value.
+In this example we're telling the Measurements plugin that measurements are found on a sheet named Position, and to look in the Category column for rows that have "MeasurementPoint" in that column.</p>
+<p>The upated workflow has two steps:  read the foci and read the measurement points.
+When measurement points are included <code>gawp</code> will make line segments from the points and run the linearization algorithm to map foci to line segments.</p>
+<p>Save the modified configuration and run the script again:</p>
+<pre><code>$ gawp --log quiet run --preview --file data/herm_5.xlsx
+
+Preview for herm_5:
+        seg_name                   point                    head                   tail   distance ...
+uid
+pdk.123       AB  POINT (19.469 128.836)  POINT (38.501 141.542)  POINT (39.457 120.56)  19.590598 ...
+pdk.174       AB   POINT (1.258 138.006)  POINT (38.501 141.542)  POINT (39.457 120.56)  37.365346 ...
+...
+</code></pre>
+<p>The column named <code>point</code> was there in the previous output.
+In the new output the Measurement plugin added <code>seg_name</code> and all the other columns that are the result of mapping the points to line segments.</p>
+<h3 id="default-settings">Default Settings</h3>
+<p>You probably noticed the original configuration file did not include options for the <code>[geometry.foci]</code> section.
+That plugin also has several options, but since the configuration file did not include them the plugin used the default values.</p>
+<p>All of the available plugins are shown in the Plugins section in the sidebar, and a complete list of options and their default values are included in the descriptions of the plugins.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../tutorial_cli_command/" class="btn btn-neutral float-left" title="The gawp Command"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../tutorial_cli_files/" class="btn btn-neutral float-right" title="Input Files">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../tutorial_cli_command/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../tutorial_cli_files/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

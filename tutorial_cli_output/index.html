@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Output Files - GAWP</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../assets/_mkdocstrings.css" rel="stylesheet" />
+        <link href="../css/gawp.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Output Files";
+        var mkdocs_page_input_path = "tutorial_cli_output.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GAWP
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Home</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="..">GAWP: Germline Analysis with Pandas</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Installation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../install/">Use pip to Install GAWP</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Tutorials</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" >Command Line</a>
+    <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli/">Introduction</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_command/">The gawp Command</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_config/">Configuration File</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_files/">Input Files</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_join/">Joins</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="#">Output Files</a>
+    <ul class="current">
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_cli_summary/">Review and Summary</a>
+                </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Jupyter Notebook</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../tutorial_jupyter/">Use GAWP in a Jupyter Notebook</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Overview</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../overview/">Define a Workflow with Plugins</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../config/">Configuring Plugins</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager_intro/">Using Plugins in An Application</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Plugins</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../io/">IO</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../geometry/">Geometry</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../join/">Join</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../group/">Group</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../stages/">Stages</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../manager/">Plugin Manager</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../dev/">Documentation</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GAWP</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Tutorials</li>
+          <li class="breadcrumb-item">Command Line</li>
+      <li class="breadcrumb-item active">Output Files</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="output-files">Output Files</h2>
+<p>The steps we've worked through so far in this tutorial follow a process we recommend each time you need to create a new GAWP workflow:</p>
+<ul>
+<li>
+<p>start with a minimal configuration</p>
+</li>
+<li>
+<p>run <code>gawp</code> in with the <code>--preview</code> option on one or two data files to make sure you're getting the columns you expect</p>
+</li>
+<li>
+<p>add new stages one at a time and test the results on the same data files</p>
+</li>
+</ul>
+<p>In previous sections we assembled a workflow that does the linearization steps and adds columns from other sheets, and configured the workflow to apply these steps to every spreadsheet in a folder.</p>
+<p>The last step is to save the results to output files.
+For this, all we need to do is add a couple of new lines to the configuration section for the IO plugin:</p>
+<ul>
+<li>
+<p>we need to tell GAWP where to put the output files</p>
+</li>
+<li>
+<p>we also want to tell it how to create the output file names</p>
+</li>
+</ul>
+<p>Open your configuration and edit the section labeled <code>[io]</code> so it looks like the code below.
+You should already have the first line in the section, you want to add the next two.</p>
+<pre><code>[io]
+spreadsheets = 'data/herm*.xlsx'
+output_dir = './output'
+output_name = 'linearized_{fn.stem}'
+</code></pre>
+<p>The <code>output_dir</code> setting tells the script to create a new directory named <code>output</code> in the current folder.</p>
+<p>The <code>output_name</code> is a <strong>pattern</strong> that means "the name of the output file should be the word 'linearized' in front of the name of the input file".</p>
+<p>After you save the updated configuration you're ready to run the script.
+If you type the same command that you have used in previous steps it will still have the <code>--preview</code> option, so it will look like nothing changed:  all the output will be printed on the console.</p>
+<p>But when you remove the <code>--preview</code> the script will save the output files.
+We suggest testing the command with a single data file to make sure you're getting the output you expect:</p>
+<pre><code>$ gawp run --file data/herm_5.xlsx
+</code></pre>
+<p>You should now have a new folder named <code>output</code>, and inside that folder a text file named <code>linearized_herm_5.csv</code>:</p>
+<pre><code>gawp_demo
+├── data
+│   ├── herm_5.xlsx
+│   ├── herm_7.xlsx
+│   └── herm_9.xlsx
+├── gawp.toml
+└── output
+    └── linearized_herm_5.csv
+</code></pre>
+<h3 id="safety-switch">Safety Switch</h3>
+<p>When you're convinced things are working, run the command again, this time without <code>--file</code>, so the script will get the file names from the configuration file and run the pipeline on all the spreadsheets:</p>
+<pre><code>$ gawp run
+ERROR    Output folder gawp_demo/output conflicts with existing folder.                                                                
+ERROR    Choose a different output name or rename/delete the existing folder.  
+</code></pre>
+<p>An error message!
+The script is warning us there is an existing folder with that name.
+If that folder has data you want to save, either rename the folder or edit the configuration file so it has a different output folder name.</p>
+<p>In this case we know the only file in that folder is the one we just made, and we don't care if the script overwrites it.
+We can tell <code>gawp</code> to go ahead and use this folder by adding <code>--force</code> to the command:</p>
+<pre><code>$ gawp run --conf linearize.toml --file data/*.xlsx --force
+INFO     config: added geometry
+INFO     config: added 
+INFO     config: added
+INFO     output directory: gawp_demo/output                                                                                            
+INFO     Linearizing herm_5
+INFO       geometry.position_frame: 100 foci
+INFO       geometry.measurements_frame: 17 points
+...                                                                                                                           
+INFO       writing output/linearized_herm_5.csv                                                                              
+INFO     Linearizing herm_7
+INFO       geometry.position_frame: 100 foci
+INFO       geometry.measurements_frame: 9 points
+...
+INFO       writing output/linearized_herm_7.csv                                                                              
+INFO     Linearizing herm_9
+INFO       geometry.position_frame: 100 foci
+INFO       geometry.measurements_frame: 10 points
+...
+INFO       writing output/linearized_herm_9.csv  
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../tutorial_cli_join/" class="btn btn-neutral float-left" title="Joins"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../tutorial_cli_summary/" class="btn btn-neutral float-right" title="Review and Summary">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../tutorial_cli_join/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../tutorial_cli_summary/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
